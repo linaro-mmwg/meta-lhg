@@ -1,0 +1,25 @@
+#
+# weston systemd service unit file
+#
+
+[Unit]
+Description=Weston launcher
+#Wants=syslog.target dbus.service
+
+[Service]
+Environment=XDG_RUNTIME_DIR=/run/user/root
+Environment=QT_QPA_PLATFORM=wayland
+Environment=ELM_ENGINE=wayland_shm
+Environment=ECORE_EVAS_ENGINE=wayland_shm
+Environment=WESTON_IDLE_TIME=648000
+Environment=WESTON_ADDONS=
+Environment=XDG_CONFIG_HOME=/home/root/.config/
+Environment=PATH=/usr/bin:/bin:/usr/sbin:/sbin
+ExecStart=-/usr/sbin/weston.sh restart
+Restart=always
+RestartSec=10
+
+[Install]
+Alias=display-manager.service
+WantedBy=graphical.target
+
