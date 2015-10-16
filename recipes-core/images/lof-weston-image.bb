@@ -1,11 +1,12 @@
 DESCRIPTION = "Linaro OpenFramework image."
+SUMMARY = "Basic Wayland image with Weston"
 
 PV = "1.0.0"
 PR = "r1"
 
 LICENSE = "MIT"
 
-inherit core-image distro_features_check
+inherit core-image distro_features_check extrausers
 
 REQUIRED_DISTRO_FEATURES = "wayland pam systemd"
 
