@@ -10,7 +10,6 @@ LICENSE = "MIT"
 #
 IMAGE_MM_PART = " \
     packagegroup-gstreamer1-0 \
-    gstreamer1.0-plugins-v4l2 \
     tiff \
     libv4l \
     rc-keymaps \
