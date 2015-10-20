@@ -16,7 +16,7 @@ S = "${WORKDIR}/git"
 #
 # * debug-build : Builds OCDM with debug symbols and verbose logging.
 
-DEPENDS_append = "  openssl "
+DEPENDS_append = "  openssl portmap"
 
 # Only ClearKey implementation depends on ssl
 DEPENDS_remove = " \
