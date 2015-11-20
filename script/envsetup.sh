@@ -98,9 +98,9 @@ _losoe_list_images_openembedded() {
 ######################################################
 # list_image for meta-st
 _losoe_list_images_meta_los() {
-    if [ -e "$LOS_OE_ROOT_DIR/meta-los" ];
+    if [ -e "$LOS_OE_ROOT_DIR/meta-lhg" ];
     then
-        local LIST=`find $LOS_OE_ROOT_DIR/meta-los/* -wholename "*/images/*.bb" | sort`
+        local LIST=`find $LOS_OE_ROOT_DIR/meta-lhg/* -wholename "*/images/*.bb" | sort`
         echo ""
         echo "=================================================="
         echo "LOS images for machine \"$MACHINE\" are:"
@@ -384,7 +384,7 @@ then
     echo "[source openembedded-core/oe-init-build-env][from nothing]"
     echo ""
     #there is no config present: make a basic init
-    TEMPLATECONF=$LOS_OE_ROOT_DIR/meta-los/conf source $LOS_OE_ROOT_DIR/openembedded-core/oe-init-build-env ${_BUILDDIR} > /dev/null 2> /dev/null
+    TEMPLATECONF=$LOS_OE_ROOT_DIR/meta-lhg/conf source $LOS_OE_ROOT_DIR/openembedded-core/oe-init-build-env ${_BUILDDIR} > /dev/null 2> /dev/null
 
     #change local.conf
     conf_localconf
@@ -392,7 +392,7 @@ then
 else
     echo "[source openembedded-core/oe-init-build-env][with previous config]"
     echo ""
-    TEMPLATECONF=$LOS_OE_ROOT_DIR/meta-los/conf source $LOS_OE_ROOT_DIR/openembedded-core/oe-init-build-env ${_BUILDDIR} > /dev/null 2> /dev/null
+    TEMPLATECONF=$LOS_OE_ROOT_DIR/meta-lhg/conf source $LOS_OE_ROOT_DIR/openembedded-core/oe-init-build-env ${_BUILDDIR} > /dev/null 2> /dev/null
 
     if [ $_FORCE_MACHINE_CHOICE -eq 1 ];
     then
