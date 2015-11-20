@@ -4,13 +4,24 @@ LCONF_VERSION = "6"
 
 BBPATH = "${TOPDIR}"
 BBFILES ?= ""
+OEROOT := "${@os.path.abspath(os.path.dirname(d.getVar('FILE', True)) + '/../..')}"
 
 BBLAYERS ?= " \
-  ##OEROOT##/meta \
-  ##OEROOT##/meta-yocto \
-  ##OEROOT##/meta-yocto-bsp \
+  ${OEROOT}/openembedded-core/meta \
+  ${OEROOT}/meta-openembedded/meta-oe \
+  ${OEROOT}/meta-openembedded/meta-systemd \
+  ${OEROOT}/meta-openembedded/meta-webserver \
+  ${OEROOT}/meta-openembedded/meta-multimedia \
+  ${OEROOT}/meta-openembedded/meta-networking \
+  ${OEROOT}/meta-openembedded/meta-python \
   "
 BBLAYERS_NON_REMOVABLE ?= " \
-  ##OEROOT##/meta \
-  ##OEROOT##/meta-yocto \
+  ${OEROOT}/openembedded-core/meta \
   "
+
+# Linaro
+BBLAYERS += "${@'${OEROOT}/meta-linaro/meta-linaro' if os.path.isfile('${OEROOT}/meta-linaro/meta-linaro/conf/layer.conf') else ''}"
+BBLAYERS += "${@'${OEROOT}/meta-linaro/meta-linaro-toolchain' if os.path.isfile('${OEROOT}/meta-linaro/meta-linaro-toolchain/conf/layer.conf') else ''}"
+
+# specific to LOF
+BBLAYERS += "${@'${OEROOT}/meta-lhg' if os.path.isfile('${OEROOT}/meta-lhg/conf/layer.conf') else ''}"

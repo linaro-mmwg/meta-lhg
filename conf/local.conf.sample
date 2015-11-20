@@ -34,7 +34,7 @@
 #MACHINE ?= "edgerouter"
 #
 # This sets the default machine to be qemux86 if no other machine is selected:
-MACHINE ??= "qemux86"
+MACHINE = "##MACHINE##"
 
 #
 # Where to place downloads
@@ -47,7 +47,7 @@ MACHINE ??= "qemux86"
 #
 # The default is a downloads directory under TOPDIR which is the build directory.
 #
-#DL_DIR ?= "${TOPDIR}/downloads"
+DL_DIR ?= "##DL_DIR##"
 
 #
 # Where to place shared-state files
@@ -85,7 +85,7 @@ MACHINE ??= "qemux86"
 # Ultimately when creating custom policy, people will likely end up subclassing 
 # these defaults.
 #
-DISTRO ?= "poky"
+DISTRO ?= "lof"
 # As an example of a subclass there is a "bleeding" edge policy configuration
 # where many versions are set to the absolute latest code from the upstream 
 # source control systems. This is just mentioned here as an example, its not
@@ -103,8 +103,8 @@ DISTRO ?= "poky"
 #  - 'package_ipk' for ipk files are used by opkg (a debian style embedded package manager)
 #  - 'package_rpm' for rpm style packages
 # E.g.: PACKAGE_CLASSES ?= "package_rpm package_deb package_ipk"
-# We default to rpm:
-PACKAGE_CLASSES ?= "package_rpm"
+# We default to deb:
+PACKAGE_CLASSES ?= "package_deb"
 
 #
 # SDK/ADT target architecture
@@ -236,3 +236,25 @@ ASSUME_PROVIDED += "libsdl-native"
 # track the version of this file when it was generated. This can safely be ignored if
 # this doesn't mean anything to you.
 CONF_VERSION = "1"
+
+# ------------------------------------
+#  Specific to LOF
+#
+#support of devshell
+INHERIT += "devshell"
+
+# Remove the old image before the new one generated to save disk space
+RM_OLD_IMAGE = "1"
+
+# Nice debug data
+INHERIT += "buildhistory"
+BUILDHISTORY_COMMIT = "1"
+
+# clean up working directory after build
+#INHERIT += "rm_work"
+
+PRSERV_HOST = "localhost:0"
+
+
+# For Qualcomm firwmare we need to accept the end user licence terms ("EULA")
+ACCEPT_QCOM_EULA = "1"
