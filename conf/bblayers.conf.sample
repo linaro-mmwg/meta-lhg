@@ -21,6 +21,7 @@ BBLAYERS_NON_REMOVABLE ?= " \
 
 # Linaro
 BBLAYERS += "${@'${OEROOT}/meta-linaro/meta-linaro' if os.path.isfile('${OEROOT}/meta-linaro/meta-linaro/conf/layer.conf') else ''}"
+BBLAYERS += "${@'${OEROOT}/meta-linaro/meta-linaro-integration' if os.path.isfile('${OEROOT}/meta-linaro/meta-linaro-integration/conf/layer.conf') else ''}"
 BBLAYERS += "${@'${OEROOT}/meta-linaro/meta-linaro-toolchain' if os.path.isfile('${OEROOT}/meta-linaro/meta-linaro-toolchain/conf/layer.conf') else ''}"
 
 # specific to LOF
