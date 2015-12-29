@@ -250,7 +250,7 @@ conf_localconf()
 #
 conf_bblayerconf()
 {
-    local machine_path=`find $LOS_OE_ROOT_DIR/meta-*/ -name "$MACHINE.conf" | sed "s#conf/machine/$MACHINE.conf##" | sed "s#$LOS_OE_ROOT_DIR/##"`
+    local machine_path=`find $LOS_OE_ROOT_DIR/meta-*/ -name "$MACHINE.conf" | sed "s#/conf/machine/$MACHINE.conf##" | sed "s#$LOS_OE_ROOT_DIR/##"`
     local specific_machine=$(grep '$machine_path' conf/bblayers.conf)
     if [ -z $specific_machine ];
     then
