@@ -26,6 +26,7 @@ BBLAYERS += "${@'${OEROOT}/meta-gstreamer1.0' if os.path.isfile('${OEROOT}/meta-
 BBLAYERS += "${@'${OEROOT}/meta-linaro/meta-linaro' if os.path.isfile('${OEROOT}/meta-linaro/meta-linaro/conf/layer.conf') else ''}"
 BBLAYERS += "${@'${OEROOT}/meta-linaro/meta-linaro-integration' if os.path.isfile('${OEROOT}/meta-linaro/meta-linaro-integration/conf/layer.conf') else ''}"
 BBLAYERS += "${@'${OEROOT}/meta-linaro/meta-linaro-toolchain' if os.path.isfile('${OEROOT}/meta-linaro/meta-linaro-toolchain/conf/layer.conf') else ''}"
+BBLAYERS += "${@'${OEROOT}/meta-linaro/meta-aarch64' if os.path.isfile('${OEROOT}/meta-linaro/meta-aarch64/conf/layer.conf') else ''}"
 #
 BBLAYERS += "${@'${OEROOT}/meta-backports' if os.path.isfile('${OEROOT}/meta-backports/conf/layer.conf') else ''}"
 
