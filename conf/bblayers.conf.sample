@@ -26,6 +26,8 @@ BBLAYERS += "${@'${OEROOT}/meta-gstreamer1.0' if os.path.isfile('${OEROOT}/meta-
 BBLAYERS += "${@'${OEROOT}/meta-linaro/meta-linaro' if os.path.isfile('${OEROOT}/meta-linaro/meta-linaro/conf/layer.conf') else ''}"
 BBLAYERS += "${@'${OEROOT}/meta-linaro/meta-linaro-integration' if os.path.isfile('${OEROOT}/meta-linaro/meta-linaro-integration/conf/layer.conf') else ''}"
 BBLAYERS += "${@'${OEROOT}/meta-linaro/meta-linaro-toolchain' if os.path.isfile('${OEROOT}/meta-linaro/meta-linaro-toolchain/conf/layer.conf') else ''}"
+#
+BBLAYERS += "${@'${OEROOT}/meta-backports' if os.path.isfile('${OEROOT}/meta-backports/conf/layer.conf') else ''}"
 
 # specific to LOF
 BBLAYERS += "${@'${OEROOT}/meta-lhg' if os.path.isfile('${OEROOT}/meta-lhg/conf/layer.conf') else ''}"
