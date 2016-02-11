@@ -39,6 +39,7 @@ IMAGE_NETWORK_PART = "\
 # INSTALL addons
 #
 IMAGE_INSTALL += " \
+    ${@base_conditional('MACHINE','hikey','kernel kernel-devicetree','',d)} \
     kernel-modules \
     \
     ${IMAGE_DISPLAY_PART} \
