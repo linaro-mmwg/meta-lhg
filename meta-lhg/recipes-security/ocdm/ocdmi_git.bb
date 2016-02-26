@@ -12,11 +12,15 @@ SRCREV_pn-ocdmi ?= "${AUTOREV}"
 
 S = "${WORKDIR}/git"
 
+EXTRA_OECONF_append = "${@base_contains('MACHINE_FEATURES', 'optee', '--enable-aes-ta', '', d)} "
+
 # * use-playready : Enables support for Playready CDMI.
 #
 # * debug-build : Builds OCDM with debug symbols and verbose logging.
 
-DEPENDS_append = "  openssl portmap"
+DEPENDS_append = " openssl portmap"
+
+DEPENDS_append = "${@base_contains('PACKAGECONFIG','optee','optee-aes-decryptor','',d)}"
 
 # Only ClearKey implementation depends on ssl
 DEPENDS_remove = " \
