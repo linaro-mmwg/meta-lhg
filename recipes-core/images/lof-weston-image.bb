@@ -17,7 +17,6 @@ IMAGE_DISPLAY_PART = " \
     libdrm \
     libdrm-tests \
     weston \
-    weston-init \
     weston-cfg-systemd \
 "
 
