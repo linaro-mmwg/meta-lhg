@@ -20,7 +20,7 @@ EXTRA_OECONF_append = "${@base_contains('MACHINE_FEATURES', 'optee', '--enable-a
 
 DEPENDS_append = " openssl portmap"
 
-DEPENDS_append = "${@base_contains('PACKAGECONFIG','optee','optee-aes-decryptor','',d)}"
+DEPENDS_append = "${@base_contains('MACHINE_FEATURES','optee',' optee-aes-decryptor ','',d)}"
 
 # Only ClearKey implementation depends on ssl
 DEPENDS_remove = " \
