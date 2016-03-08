@@ -296,6 +296,25 @@ select_machine() {
     MACHINE=$(echo -n $MACHINE | sed 's/ //')
 }
 
+######################################################
+# toolchain
+TOOLCHAIN_NAME=gcc-linaro-arm-linux-gnueabihf-4.8-2014.04_linux
+verify_toolchain() {
+    which arm-linux-gnueabihf-gcc > /dev/null
+    if [ $? -eq 1 ];
+    then
+        #not toolchain available on PATH
+        if [ -d $LOF_OE_ROOT_DIR/toolchain/$TOOLCHAIN_NAME/ ];
+        then
+            echo "Secondary toolchain already installed."
+        else
+            mkdir -p $LOF_OE_ROOT_DIR/toolchain/
+            wget https://releases.linaro.org/14.04/components/toolchain/binaries/$TOOLCHAIN_NAME.tar.bz2 -O $LOF_OE_ROOT_DIR/toolchain/$TOOLCHAIN_NAME.tar.bz2
+            tar xf $LOF_OE_ROOT_DIR/toolchain/$TOOLCHAIN_NAME.tar.bz2 -C $LOF_OE_ROOT_DIR/toolchain/
+        fi
+        export PATH=$LOF_OE_ROOT_DIR/toolchain/$TOOLCHAIN_NAME/bin/:$PATH
+    fi
+}
 
 ######################################################
 # Main
@@ -341,6 +360,8 @@ do
 done
 
 lofoe_set_env
+
+verify_toolchain
 
 if [ -d "$LOF_OE_ROOT_DIR/$_BUILDDIR" ]; then
     # check if this build-$MACHINE folder was already configured
