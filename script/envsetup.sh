@@ -10,7 +10,7 @@ _FORCE_MACHINE_CHOICE=0
 
 ######################################################
 # Envsetup help
-losoe_help() {
+lofoe_help() {
     cat <<EOF
 
     Usage: [MACHINE=<MACHINE>] source $BASH_SOURCE [--change] [BUILDDIR]
@@ -23,30 +23,30 @@ EOF
     echo "  --help   : display this help"
     echo "  BUILDDIR : provide specific build folder (default is 'build')"
     echo ""
-    echo "LOS OE Utilities"
+    echo "LOF OE Utilities"
     echo "  oe_list_images        : list all images available"
     echo "  oe_list_tasks <pack>  : list all tasks"
     echo ""
     echo "=================================================="
     echo "List of environment variables available:"
-    echo "  LOS_OE_ROOT_DIR          = $LOS_OE_ROOT_DIR"
-    echo "  LOS_OE_BUILD_DIR         = $LOS_OE_BUILD_DIR"
-    echo "  LOS_OE_DL_DIR            = $LOS_OE_DL_DIR"
+    echo "  LOF_OE_ROOT_DIR          = $LOF_OE_ROOT_DIR"
+    echo "  LOF_OE_BUILD_DIR         = $LOF_OE_BUILD_DIR"
+    echo "  LOF_OE_DL_DIR            = $LOF_OE_DL_DIR"
     echo ""
 }
 
 ######################################################
 # alias function: set all environment variables
 #
-losoe_set_env() {
-     export LOS_OE_ROOT_DIR=$(readlink -f -- "$PWD/")
-    export LOS_OE_BUILD_DIR=$LOS_OE_ROOT_DIR/$_BUILDDIR
-    export LOS_OE_DL_DIR=$HOME/Public/oe-downloads
+lofoe_set_env() {
+    export LOF_OE_ROOT_DIR=$(readlink -f -- "$PWD/")
+    export LOF_OE_BUILD_DIR=$LOF_OE_ROOT_DIR/$_BUILDDIR
+    export LOF_OE_DL_DIR=$HOME/Public/oe-downloads
 }
 
 ######################################################
 # extract description for images provided
-_losoe_list_images_descr() {
+_lofoe_list_images_descr() {
     for l in $1;
     do
         local image=`echo $l | sed -e 's#^.*/\([^/]*\).bb$#\1#'`
@@ -71,51 +71,51 @@ _losoe_list_images_descr() {
 
 ######################################################
 # list_image for meta-linaro
-_losoe_list_images_linaro() {
-    if [[ -d $LOS_OE_ROOT_DIR/meta-linaro ]]; then
-        local LIST=`find $LOS_OE_ROOT_DIR/meta-linaro -wholename "*/images/*.bb" | sort`
+_lofoe_list_images_linaro() {
+    if [[ -d $LOF_OE_ROOT_DIR/meta-linaro ]]; then
+        local LIST=`find $LOF_OE_ROOT_DIR/meta-linaro -wholename "*/images/*.bb" | sort`
         echo ""
         echo "=================================================="
         echo "Linaro targets are:"
         echo ""
-        _losoe_list_images_descr "$LIST"
+        _lofoe_list_images_descr "$LIST"
     fi
 }
 
 ######################################################
 # list_image for openembedded-core
-_losoe_list_images_openembedded() {
-    if [[ -d $LOS_OE_ROOT_DIR/openembedded-core ]]; then
-        local LIST=`find $LOS_OE_ROOT_DIR/openembedded-core -wholename "*/images/*.bb" | grep -v meta-skeleton | sort`
+_lofoe_list_images_openembedded() {
+    if [[ -d $LOF_OE_ROOT_DIR/openembedded-core ]]; then
+        local LIST=`find $LOF_OE_ROOT_DIR/openembedded-core -wholename "*/images/*.bb" | grep -v meta-skeleton | sort`
         echo ""
         echo "=================================================="
         echo "Openembedded targets are:"
         echo ""
-        _losoe_list_images_descr "$LIST"
+        _lofoe_list_images_descr "$LIST"
     fi
 }
 
 ######################################################
 # list_image for meta-st
-_losoe_list_images_meta_los() {
-    if [ -e "$LOS_OE_ROOT_DIR/meta-lhg" ];
+_lofoe_list_images_meta_lof() {
+    if [ -e "$LOF_OE_ROOT_DIR/meta-lhg" ];
     then
-        local LIST=`find $LOS_OE_ROOT_DIR/meta-lhg/* -wholename "*/images/*.bb" | sort`
+        local LIST=`find $LOF_OE_ROOT_DIR/meta-lhg/* -wholename "*/images/*.bb" | sort`
         echo ""
         echo "=================================================="
-        echo "LOS images for machine \"$MACHINE\" are:"
+        echo "LOF images for machine \"$MACHINE\" are:"
         echo ""
-        _losoe_list_images_descr "$LIST" "ERR"
+        _lofoe_list_images_descr "$LIST" "ERR"
     fi
 }
 
 ######################################################
 # alias function: list all images available
 #
-losoe_list_images() {
-#    _losoe_list_images_linaro
-    _losoe_list_images_openembedded
-    _losoe_list_images_meta_los
+lofoe_list_images() {
+#    _lofoe_list_images_linaro
+    _lofoe_list_images_openembedded
+    _lofoe_list_images_meta_lof
     if [ $? == "0" ]
     then
         echo ""
@@ -127,7 +127,7 @@ losoe_list_images() {
 ######################################################
 # alias function: list task of specific package via bitbake
 #
-losoe_list_tasks() {
+lofoe_list_tasks() {
     if [ $# -eq 1 ];
     then
         _PACKAGE=$1
@@ -143,7 +143,7 @@ losoe_list_tasks() {
 ######################################################
 # Check if need to reset previous config files
 #
-_losoe_update_conf() {
+_lofoe_update_conf() {
     # List all possible machines, and ask user
     echo -n "Do you want to remove actual config files ? [y/N]  "
     read answer
@@ -156,13 +156,13 @@ _losoe_update_conf() {
     if [ "$answer" == "y" ] || [ "$answer" == "Y" ];
     then
         echo ""
-        echo "Removing current config in $LOS_OE_ROOT_DIR/$_BUILDDIR/conf ..."
-        rm -fv $LOS_OE_ROOT_DIR/$_BUILDDIR/conf/*.conf
+        echo "Removing current config in $LOF_OE_ROOT_DIR/$_BUILDDIR/conf ..."
+        rm -fv $LOF_OE_ROOT_DIR/$_BUILDDIR/conf/*.conf
         echo ""
     elif [ "$answer" == "n" ]  || [ "$answer" == "N" ];
     then
         echo ""
-        echo "Keeping current config in $LOS_OE_BUILD_DIR/conf ..."
+        echo "Keeping current config in $LOF_OE_BUILD_DIR/conf ..."
         echo ""
     else
         echo "Invalid choice" $answer
@@ -236,7 +236,7 @@ conf_localconf()
     [ "$_NCPU" -ge 1 ] 2>/dev/null || _NCPU=2
 
     #change DL_DIR
-    sed -e "s;##DL_DIR##;$LOS_OE_DL_DIR;g" -i conf/local.conf
+    sed -e "s;##DL_DIR##;$LOF_OE_DL_DIR;g" -i conf/local.conf
 
     #change CPU number
     sed -e "s/##CPU##/$_NCPU/g" -i conf/local.conf
@@ -250,7 +250,7 @@ conf_localconf()
 #
 conf_bblayerconf()
 {
-    local machine_path=`find $LOS_OE_ROOT_DIR/meta-*/ -name "$MACHINE.conf" | sed "s#/conf/machine/$MACHINE.conf##" | sed "s#$LOS_OE_ROOT_DIR/##"`
+    local machine_path=`find $LOF_OE_ROOT_DIR/meta-* -name "$MACHINE.conf" | sed "s#/conf/machine/$MACHINE.conf##" | sed "s#$LOF_OE_ROOT_DIR/##"`
     local specific_machine=$(grep '$machine_path' conf/bblayers.conf)
     if [ -z $specific_machine ];
     then
@@ -269,24 +269,12 @@ EOF
 select_machine() {
     # List all possible machines, and ask user
     echo "[Machine configuration]"
-    local options=$(\ls -1 $LOS_OE_ROOT_DIR/meta-*/conf/machine/*.conf 2>/dev/null | sort | uniq)
+    local options=$(find $LOF_OE_ROOT_DIR/ -print | grep "conf/machine/[^\/]*\.conf" | grep -v scripts | grep -v openembedded-core | grep -v meta-linaro | sed -e 's/\.conf//g' | awk -F'/' '{print $NF "(" $2 ")"}' | sort | uniq)
     local len_options=$(echo "$options" | wc -l)
     if [ $len_options -eq 1 ];
     then
-        MACHINE=$(echo $options | sed 's|^.*/\(.*\)\.conf|\1|')
+        MACHINE="$(echo $options | cut -d'(' -f1) $(echo $ITEM | cut -d'(' -f2 | cut -d')' -f1)"
     else
-        for f in $options
-        do
-            if [[ -z $(grep "#@DESCRIPTION" $f) ]]; then
-                echo ""
-                echo "ERROR: No '#@DESCRIPTION' field available in machine file:"
-                echo "$f"
-                echo ""
-                return 1
-            fi
-        done
-        #format options to print both machine file name and description field (extracted from machine file)
-        options=$(echo $options | xargs grep "#@DESCRIPTION" | sed 's|^.*/\(.*\)\.conf:#@DESCRIPTION:\(.*$\)|\1::-::\2|' | column -t -s "::")
         PS3="Please enter your choice of machine (1-$len_options): "
         #change separator from 'space' to 'end of line' for 'select' command
         old_IFS=$IFS
@@ -296,7 +284,8 @@ select_machine() {
             if [ -z "$opt" ]; then
                 echo "Invalid choice"
             else
-                MACHINE=$(echo $opt | cut -d' ' -f1)
+                #MACHINE=$(echo $opt | cut -d' ' -f1)
+                MACHINE="$(echo $options | cut -d'(' -f1) $(echo $ITEM | cut -d'(' -f2 | cut -d')' -f1)"
                 break;
             fi
         done
@@ -304,8 +293,28 @@ select_machine() {
         unset PS3
     fi
     echo ""
+    MACHINE=$(echo -n $MACHINE | sed 's/ //')
 }
 
+######################################################
+# toolchain
+TOOLCHAIN_NAME=gcc-linaro-arm-linux-gnueabihf-4.8-2014.04_linux
+verify_toolchain() {
+    which arm-linux-gnueabihf-gcc > /dev/null
+    if [ $? -eq 1 ];
+    then
+        #not toolchain available on PATH
+        if [ -d $LOF_OE_ROOT_DIR/toolchain/$TOOLCHAIN_NAME/ ];
+        then
+            echo "Secondary toolchain already installed."
+        else
+            mkdir -p $LOF_OE_ROOT_DIR/toolchain/
+            wget https://releases.linaro.org/14.04/components/toolchain/binaries/$TOOLCHAIN_NAME.tar.bz2 -O $LOF_OE_ROOT_DIR/toolchain/$TOOLCHAIN_NAME.tar.bz2
+            tar xf $LOF_OE_ROOT_DIR/toolchain/$TOOLCHAIN_NAME.tar.bz2 -C $LOF_OE_ROOT_DIR/toolchain/
+        fi
+        export PATH=$LOF_OE_ROOT_DIR/toolchain/$TOOLCHAIN_NAME/bin/:$PATH
+    fi
+}
 
 ######################################################
 # Main
@@ -332,7 +341,7 @@ while test $# != 0
 do
     case "$1" in
     --help)
-        losoe_help
+        lofoe_help
         if [ "$0" != "$BASH_SOURCE" ]; then
             return 1
         else
@@ -350,9 +359,11 @@ do
     shift
 done
 
-losoe_set_env
+lofoe_set_env
 
-if [ -d "$LOS_OE_ROOT_DIR/$_BUILDDIR" ]; then
+verify_toolchain
+
+if [ -d "$LOF_OE_ROOT_DIR/$_BUILDDIR" ]; then
     # check if this build-$MACHINE folder was already configured
     if [ -f ${_BUILDDIR}/conf/local.conf ] && \
         [ -f ${_BUILDDIR}/conf/bblayers.conf ]; then
@@ -370,11 +381,11 @@ if [ "$_CONFIGS_FOUND" ]; then
     echo ""
     if [ $_FORCE_MACHINE_CHOICE -eq 1 ];
     then
-        _losoe_update_conf
+        _lofoe_update_conf
     fi
 fi
 
-if [ ! -f $LOS_OE_ROOT_DIR/$_BUILDDIR/conf/local.conf ];
+if [ ! -f $LOF_OE_ROOT_DIR/$_BUILDDIR/conf/local.conf ];
 then
     if [ -z $MACHINE ];
     then
@@ -384,7 +395,7 @@ then
     echo "[source openembedded-core/oe-init-build-env][from nothing]"
     echo ""
     #there is no config present: make a basic init
-    TEMPLATECONF=$LOS_OE_ROOT_DIR/meta-lhg/conf source $LOS_OE_ROOT_DIR/openembedded-core/oe-init-build-env ${_BUILDDIR} > /dev/null 2> /dev/null
+    TEMPLATECONF=$LOF_OE_ROOT_DIR/meta-lhg/conf source $LOF_OE_ROOT_DIR/openembedded-core/oe-init-build-env ${_BUILDDIR} > /dev/null 2> /dev/null
 
     #change local.conf
     conf_localconf
@@ -392,7 +403,7 @@ then
 else
     echo "[source openembedded-core/oe-init-build-env][with previous config]"
     echo ""
-    TEMPLATECONF=$LOS_OE_ROOT_DIR/meta-lhg/conf source $LOS_OE_ROOT_DIR/openembedded-core/oe-init-build-env ${_BUILDDIR} > /dev/null 2> /dev/null
+    TEMPLATECONF=$LOF_OE_ROOT_DIR/meta-lhg/conf source $LOF_OE_ROOT_DIR/openembedded-core/oe-init-build-env ${_BUILDDIR} > /dev/null 2> /dev/null
 
     if [ $_FORCE_MACHINE_CHOICE -eq 1 ];
     then
@@ -422,7 +433,7 @@ Configuration files have been created for the following configuration:
 EOF
 
 # List images
-losoe_list_images
+lofoe_list_images
 
 # Since this script is sourced, be careful not to pollute caller's environment with temp variables
 unset -f usage
