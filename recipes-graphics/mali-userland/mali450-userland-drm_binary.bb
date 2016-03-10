@@ -5,7 +5,8 @@ LICENSE = "Proprietary"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
-DEPENDS = "libdrm wayland"
+# This driver doesn't have pkgconfig's, and depends on mesa to provide them
+DEPENDS = "libdrm wayland mesa"
 
 PV_MALI="r6p0"
 PR_MALI="01rel0"
