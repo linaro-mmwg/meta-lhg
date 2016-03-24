@@ -24,9 +24,14 @@ FILES_${PN} += "/lib/systemd/system/weston.service \
             /etc/systemd/system/multi-user.target.wants/display-manager.service \
             /etc/profile.d/"
 
+WESTON_OUT_NAME ?= "HDMI1"
+WESTON_OUT_MODE ?= "preferred"
+
 do_install() {
   install -d ${D}/usr/share/weston
   install -d ${D}/usr/share/weston/icon
+  sed -i -e "s/##WESTON_OUT_NAME##/${WESTON_OUT_NAME}/g" ${WORKDIR}/weston.ini
+  sed -i -e "s/##WESTON_OUT_MODE##/${WESTON_OUT_MODE}/g" ${WORKDIR}/weston.ini
   install -m 0644 ${WORKDIR}/weston.ini ${D}/usr/share/weston/weston.ini
   install -m 0644 ${WORKDIR}/utilities-terminal.png ${D}/usr/share/weston/icon/utilities-terminal.png
   install -m 0644 ${WORKDIR}/chromium-browser.png ${D}/usr/share/weston/icon/chromium-browser.png
