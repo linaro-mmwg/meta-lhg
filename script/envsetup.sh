@@ -269,11 +269,11 @@ EOF
 select_machine() {
     # List all possible machines, and ask user
     echo "[Machine configuration]"
-    local options=$(find $LOF_OE_ROOT_DIR/ -print | grep "conf/machine/[^\/]*\.conf" | grep -v scripts | grep -v openembedded-core | grep -v meta-linaro | sed -e 's/\.conf//g' | awk -F'/' '{print $NF "(" $2 ")"}' | sort | uniq)
+    local options=$(find $LOF_OE_ROOT_DIR/ -print | grep "conf/machine/[^\/]*\.conf" | grep -v scripts | grep -v openembedded-core | grep -v meta-linaro | sed -e 's/\.conf//g' | awk -F'/' '{print $NF " (" $(NF-3) ")"}' | sort | uniq)
     local len_options=$(echo "$options" | wc -l)
     if [ $len_options -eq 1 ];
     then
-        MACHINE="$(echo $options | cut -d'(' -f1) $(echo $ITEM | cut -d'(' -f2 | cut -d')' -f1)"
+        MACHINE=$(echo $options | cut -d'(' -f1)
     else
         PS3="Please enter your choice of machine (1-$len_options): "
         #change separator from 'space' to 'end of line' for 'select' command
@@ -284,8 +284,7 @@ select_machine() {
             if [ -z "$opt" ]; then
                 echo "Invalid choice"
             else
-                #MACHINE=$(echo $opt | cut -d' ' -f1)
-                MACHINE="$(echo $options | cut -d'(' -f1) $(echo $ITEM | cut -d'(' -f2 | cut -d')' -f1)"
+                MACHINE=$(echo $opt | cut -d' ' -f1)
                 break;
             fi
         done
