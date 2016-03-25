@@ -257,4 +257,4 @@ PRSERV_HOST = "localhost:0"
 
 
 # For Qualcomm firwmare we need to accept the end user licence terms ("EULA")
-ACCEPT_QCOM_EULA = "1"
+ACCEPT_EULA_dragonboard-410c = "1"
