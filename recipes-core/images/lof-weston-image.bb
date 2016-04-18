@@ -63,6 +63,7 @@ IMAGE_INSTALL += " \
     e2fsprogs-resize2fs \
     e2fsprogs-mke2fs \
     sysstat \
+    ${@base_contains('MACHINE_FEATURES', 'optee', 'packagegroup-optee', '', d)} \
 "
 
 IMAGE_FEATURES += "splash package-management ssh-server-dropbear hwcodecs"
