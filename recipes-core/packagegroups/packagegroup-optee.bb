@@ -12,6 +12,7 @@ RDEPENDS_${PN} = " \
     optee-client \
     optee-ta-luc14-helloword \
     ocdmi \
+    portmap \
     "
 RRECOMMENDS_${PN} = " \
     kernel-module-optee
