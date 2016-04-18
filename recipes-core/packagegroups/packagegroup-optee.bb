@@ -11,6 +11,7 @@ RDEPENDS_${PN} = " \
     optee-os \
     optee-client \
     optee-ta-luc14-helloword \
+    ocdmi \
     "
 RRECOMMENDS_${PN} = " \
     kernel-module-optee
