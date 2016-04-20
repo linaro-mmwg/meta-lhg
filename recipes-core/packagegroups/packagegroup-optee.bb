@@ -15,5 +15,5 @@ RDEPENDS_${PN} = " \
     portmap \
     "
 RRECOMMENDS_${PN} = " \
-    kernel-module-optee
+    kernel-module-optee \
     "
