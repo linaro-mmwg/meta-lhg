@@ -36,3 +36,5 @@ BBLAYERS += "${@'${OEROOT}/meta-openembedded/meta-gnome' if os.path.isfile('${OE
 
 # specific to LOF
 BBLAYERS += "${@'${OEROOT}/meta-lhg' if os.path.isfile('${OEROOT}/meta-lhg/conf/layer.conf') else ''}"
+# meta-security
+BBLAYERS += "${@'${OEROOT}/meta-security' if os.path.isfile('${OEROOT}/meta-security/conf/layer.conf') else ''}"
