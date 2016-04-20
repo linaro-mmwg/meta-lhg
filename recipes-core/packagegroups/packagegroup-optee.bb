@@ -7,7 +7,6 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 inherit packagegroup
 
 RDEPENDS_${PN} = " \
-    kernel-module-optee-armtz \
     optee-os \
     optee-client \
     optee-ta-luc14-helloword \
@@ -15,6 +14,8 @@ RDEPENDS_${PN} = " \
     ocdmi \
     portmap \
     "
+# kernel-module-optee* aren't used starting from OPTEE 2.0
 RRECOMMENDS_${PN} = " \
     kernel-module-optee \
+    kernel-module-optee-armtz \
     "
