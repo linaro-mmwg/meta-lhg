@@ -9,7 +9,7 @@ inherit packagegroup
 RDEPENDS_${PN} = " \
     optee-os \
     optee-client \
-    optee-ta-luc14-helloword \
+    optee-ta-luc14-helloworld \
     optee-aes-decryptor \
     ocdmi \
     portmap \
