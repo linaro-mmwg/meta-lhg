@@ -10,6 +10,7 @@ RDEPENDS_${PN} = " \
     optee-os \
     optee-client \
     optee-ta-luc14-helloworld \
+    optee-test \
     optee-aes-decryptor \
     ocdmi \
     portmap \
