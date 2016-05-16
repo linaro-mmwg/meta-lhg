@@ -9,7 +9,6 @@ LICENSE = "MIT"
 # Multimedia part addons
 #
 IMAGE_MM_PART = " \
-    packagegroup-gstreamer1-0 \
     tiff \
     libv4l \
     rc-keymaps \
