@@ -19,9 +19,6 @@ BBLAYERS_NON_REMOVABLE ?= " \
   ${OEROOT}/openembedded-core/meta \
   "
 
-# meta-gstreamer1.0
-BBLAYERS += "${@'${OEROOT}/meta-gstreamer1.0' if os.path.isfile('${OEROOT}/meta-gstreamer1.0/conf/layer.conf') else ''}"
-
 # Linaro
 BBLAYERS += "${@'${OEROOT}/meta-linaro/meta-linaro' if os.path.isfile('${OEROOT}/meta-linaro/meta-linaro/conf/layer.conf') else ''}"
 BBLAYERS += "${@'${OEROOT}/meta-linaro/meta-linaro-integration' if os.path.isfile('${OEROOT}/meta-linaro/meta-linaro-integration/conf/layer.conf') else ''}"
