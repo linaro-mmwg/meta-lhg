@@ -1,0 +1,40 @@
+From 33531a448003c7e167939c2f647afbb316ee7ba4 Mon Sep 17 00:00:00 2001
+From: Andrey Konovalov <andrey.konovalov@linaro.org>
+Date: Wed, 28 Sep 2016 11:55:03 -0700
+Subject: [PATCH] [HACK] bump up egl's and wayland-egl's version numbers
+
+.. to make Chromium build system happy.
+
+Signed-off-by: Andrey Konovalov <andrey.konovalov@linaro.org>
+---
+ targetfs/jacinto6evm/lib/pkgconfig/egl.pc         | 2 +-
+ targetfs/jacinto6evm/lib/pkgconfig/wayland-egl.pc | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/targetfs/jacinto6evm/lib/pkgconfig/egl.pc b/targetfs/jacinto6evm/lib/pkgconfig/egl.pc
+index 1f26003..8b8028d 100644
+--- a/targetfs/jacinto6evm/lib/pkgconfig/egl.pc
++++ b/targetfs/jacinto6evm/lib/pkgconfig/egl.pc
+@@ -5,6 +5,6 @@ includedir=${prefix}/include
+ 
+ Name: EGL
+ Description: PowerVR EGL library
+-Version: 8.14
++Version: 12.12.12
+ Libs: -L${libdir} -lEGL -lIMGegl -ldrm_omap -lsrv_um
+ Cflags: -I${includedir}
+diff --git a/targetfs/jacinto6evm/lib/pkgconfig/wayland-egl.pc b/targetfs/jacinto6evm/lib/pkgconfig/wayland-egl.pc
+index 01163c6..529100a 100644
+--- a/targetfs/jacinto6evm/lib/pkgconfig/wayland-egl.pc
++++ b/targetfs/jacinto6evm/lib/pkgconfig/wayland-egl.pc
+@@ -5,6 +5,6 @@ includedir=${prefix}/include
+ 
+ Name: pvr_wlegl
+ Description: PowerVR pvr_wlegl library
+-Version: 8.14
++Version: 12.12.12
+ Libs: -L${libdir} -lpvr_wlegl 
+ Cflags: -I${includedir}
+-- 
+2.1.4
+
