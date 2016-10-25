@@ -1,21 +1,16 @@
-Meta-lhg
-================================
-
 Introduction
 --------------------------------
 
+This repository contains LHG layers for Open Embedded.
+
+meta-lhg:
+
 The OpenEmbedded layer for LHG specific components.
 
-This layer depends on:
+meta-lhg-integration:
 
-  URI: https://github.com/openembedded/oe-core.git
-  layers: meta
-  branch: master
-
-  URI: https://github.com/96boards/meta-96boards.git
-  layers: meta-96boards
-  branch: master
-
+This layer contains fixes or workarounds needed to integrate components 
+external to LHG into public LHG OE builds. Would be empty in an ideal world.
 
 Contributing
 --------------------------------
