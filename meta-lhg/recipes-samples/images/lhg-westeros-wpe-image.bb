@@ -13,3 +13,5 @@ CORE_IMAGE_BASE_INSTALL_remove = " \
     weston-examples \
     weston-init \
 "
+
+EXTRA_USERS_PARAMS = " "
