@@ -4,3 +4,5 @@ RDEPS_EXTRA_remove = " \
                       gstreamer1.0-plugins-bad-hls \
                      "
                      
+# remove playready
+PACKAGECONFIG_remove = "playready"
