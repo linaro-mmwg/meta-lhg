@@ -2,7 +2,7 @@ SUMMARY = "OPTEE AES Decryptor for Linaro OpenCDM"
 DESCRIPTION = "OPTEE AES Decryptor for Linaro OpenCDM"
 
 LICENSE = "BSD"
-LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=f0fb2f357d31d6a98213b19f57abf927"
+LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=22b593390e65f8d23beaa6ef10ed6392"
 PR="r0"
 PV="1.0+git"
 
