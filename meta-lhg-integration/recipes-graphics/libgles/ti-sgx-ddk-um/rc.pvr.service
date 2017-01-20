@@ -1,0 +1,11 @@
+[Unit]
+Description=PowerVR initialization server
+Before=multi-user.target
+
+[Service]
+ExecStart=/usr/bin/pvr-init start
+ExecStop=/usr/bin/pvr-init stop
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
