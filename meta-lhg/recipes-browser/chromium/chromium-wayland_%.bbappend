@@ -10,9 +10,9 @@ SRCREV_ocdm = "${AUTOREV}"
 DEPENDS_append = " ${@bb.utils.contains('PACKAGECONFIG', 'use-ocdm', 'ocdmi', '', d)} "
 
 python add_ocdm_patches() {
-    import glob
     srcdir = d.getVar('WORKDIR', True)
-    d.appendVar('SRC_URI', "file://" + srcdir + "/ocdm/patch/add_ocdm_keyssystems.patch")
+    d.appendVar('SRC_URI', " file://" + srcdir + "/ocdm/patch/add_ocdm_keyssystems.patch")
+    d.appendVar('SRC_URI', " file://" + srcdir + "/ocdm/patch/add_playready_keysystem.patch")
 }
 
 copy_ocdm_files() {
