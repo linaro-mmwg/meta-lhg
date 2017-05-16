@@ -3,6 +3,11 @@ PACKAGECONFIG_append = " ${@bb.utils.contains('MACHINE_FEATURES', 'optee', 'use-
 OCDM_GIT_BRANCH="chromium-53.0.2785.143"
 OCDM_DESTSUFIX="ocdm"
 
+#This is deliberately separated from CHROMIUM_BUILD_TYPE so we can
+#easily enable debug builds of just the OpenCDM plugin for symbolic
+#debugging using --ppapi-plugin-launcher='gdbserver localhost:4444'
+OCDM_CHROMIUM_BUILD_TYPE="Release"
+
 SRC_URI += "${@bb.utils.contains('PACKAGECONFIG', 'use-ocdm', '\
     git://github.com/linaro-home/open-content-decryption-module.git;protocol=https;branch=${OCDM_GIT_BRANCH};name=ocdm;destsuffix=${OCDM_DESTSUFIX}\
     ', '', d)}"
@@ -24,15 +29,15 @@ do_unpack[postfuncs] += "${@bb.utils.contains('PACKAGECONFIG', 'use-ocdm', 'copy
 
 do_compile_append() {
     if [ -n "${@bb.utils.contains('PACKAGECONFIG', 'use-ocdm', 'use-ocdm', '', d)}" ]; then
-        ninja -C ${S}/out/${CHROMIUM_BUILD_TYPE} opencdmadapter
+        ninja -C ${S}/out/${OCDM_CHROMIUM_BUILD_TYPE} opencdmadapter
     fi
 }
 
 do_install_append() {
     if [ -n "${@bb.utils.contains('PACKAGECONFIG', 'use-ocdm', 'use-ocdm', '', d)}" ]; then
-        install -Dm 0755 ${B}/out/${CHROMIUM_BUILD_TYPE}/libopencdmadapter.so \
+        install -Dm 0755 ${B}/out/${OCDM_CHROMIUM_BUILD_TYPE}/libopencdmadapter.so \
             ${D}${libdir}/${BPN}/libopencdmadapter.so
-        install -Dm 0755 ${B}/out/${CHROMIUM_BUILD_TYPE}/libopencdm.so \
+        install -Dm 0755 ${B}/out/${OCDM_CHROMIUM_BUILD_TYPE}/libopencdm.so \
             ${D}${libdir}/${BPN}/libopencdm.so
     fi
 }
