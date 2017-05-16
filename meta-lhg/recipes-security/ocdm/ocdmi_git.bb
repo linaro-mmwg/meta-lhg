@@ -14,13 +14,13 @@ S = "${WORKDIR}/git"
 
 EXTRA_OECONF_append = "${@bb.utils.contains('MACHINE_FEATURES', 'optee', '--enable-aes-ta', '', d)} "
 
-# * use-playready : Enables support for Playready CDMI.
+# * --enable-playready : Enables support for Playready CDMI.
 #
-# * debug-build : Builds OCDM with debug symbols and verbose logging.
+# * --enable-debug : Builds OCDM with debug symbols and verbose logging.
 
 # Only ClearKey implementation depends on ssl:
 DEPENDS_append = " \
-    ${@bb.utils.contains('PACKAGECONFIG','use-playready','','openssl',d)} \
+    ${@bb.utils.contains('PACKAGECONFIG','--enable-playready','','openssl',d)} \
     portmap \
     ${@bb.utils.contains('MACHINE_FEATURES','optee','optee-aes-decryptor','',d)} \
 "
