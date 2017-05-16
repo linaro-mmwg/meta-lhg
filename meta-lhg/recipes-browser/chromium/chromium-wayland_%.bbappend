@@ -1,4 +1,4 @@
-PACKAGECONFIG_append = " ${@bb.utils.contains('MACHINE_FEATURES', 'optee', 'use-ocdm', '', d)}"
+PACKAGECONFIG_append = " ${@bb.utils.contains('MACHINE_FEATURES', 'optee', 'use-ocdm', '', d)}  proprietary-codecs"
 
 OCDM_GIT_BRANCH="chromium-53.0.2785.143"
 OCDM_DESTSUFIX="ocdm"
