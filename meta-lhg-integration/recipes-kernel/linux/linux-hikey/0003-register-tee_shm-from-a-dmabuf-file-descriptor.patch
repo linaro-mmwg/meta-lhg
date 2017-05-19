@@ -1,0 +1,348 @@
+From 65abaf2d91d530bb639a31b9d9adbf1b4db805cd Mon Sep 17 00:00:00 2001
+From: jennifer111 <jie.mu@linaro.org>
+Date: Thu, 18 May 2017 04:03:15 +0200
+Subject: [PATCH] register tee_shm from a dmabuf file descriptor
+
+Signed-off-by: jennifer111 <jie.mu@linaro.org>
+---
+ drivers/tee/tee_core.c   |  37 ++++++++++++
+ drivers/tee/tee_shm.c    | 148 ++++++++++++++++++++++++++++++++++++++++++-----
+ include/linux/tee_drv.h  |  16 ++++-
+ include/uapi/linux/tee.h |  29 ++++++++++
+ 4 files changed, 213 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/tee/tee_core.c b/drivers/tee/tee_core.c
+index 2045210..a9a095a 100644
+--- a/drivers/tee/tee_core.c
++++ b/drivers/tee/tee_core.c
+@@ -132,6 +132,41 @@ static int tee_ioctl_shm_alloc(struct tee_context *ctx,
+ 	tee_shm_put(shm);
+ 	return ret;
+ }
++static int tee_ioctl_shm_register_fd(struct tee_context *ctx,
++ 			struct tee_ioctl_shm_register_fd_data __user *udata)
++ {
++ 	struct tee_ioctl_shm_register_fd_data data;
++ 	struct tee_shm *shm;
++ 	long ret;
++ 
++ 	if (copy_from_user(&data, udata, sizeof(data)))
++ 		return -EFAULT;
++ 
++ 	/* Currently no input flags are supported */
++ 	if (data.flags)
++ 		return -EINVAL;
++ 
++ 	shm = tee_shm_register_fd(ctx, data.fd);
++ 	if (IS_ERR_OR_NULL(shm))
++ 		return -EINVAL;
++ 
++ 	data.id = shm->id;
++ 	data.flags = shm->flags;
++ 	data.size = shm->size;
++ 
++ 	if (copy_to_user(udata, &data, sizeof(data)))
++ 		ret = -EFAULT;
++ 	else
++ 		ret = tee_shm_get_fd(shm);
++ 
++ 	/*
++ 	 * When user space closes the file descriptor the shared memory
++ 	 * should be freed or if tee_shm_get_fd() failed then it will
++ 	 * be freed immediately.
++ 	 */
++ 	tee_shm_put(shm);
++ 	return ret;
++ }
+ 
+ static int params_from_user(struct tee_context *ctx, struct tee_param *params,
+ 			    size_t num_params,
+@@ -586,6 +621,8 @@ static long tee_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
+ 		return tee_ioctl_version(ctx, uarg);
+ 	case TEE_IOC_SHM_ALLOC:
+ 		return tee_ioctl_shm_alloc(ctx, uarg);
++	case TEE_IOC_SHM_REGISTER_FD:
++		return tee_ioctl_shm_register_fd(ctx, uarg);
+ 	case TEE_IOC_OPEN_SESSION:
+ 		return tee_ioctl_open_session(ctx, uarg);
+ 	case TEE_IOC_INVOKE:
+diff --git a/drivers/tee/tee_shm.c b/drivers/tee/tee_shm.c
+index 9fd501c..f6b63ed 100644
+--- a/drivers/tee/tee_shm.c
++++ b/drivers/tee/tee_shm.c
+@@ -20,24 +20,43 @@
+ #include <linux/tee_drv.h>
+ #include "tee_private.h"
+ 
++/* extra references appended to shm object for registered shared memory */
++struct tee_shm_dmabuf_ref {
++      struct tee_shm shm;
++      struct dma_buf *dmabuf;
++      struct dma_buf_attachment *attach;
++      struct sg_table *sgt;
++};
++
+ static void tee_shm_release(struct tee_shm *shm)
+ {
+ 	struct tee_device *teedev = shm->teedev;
+-	struct tee_shm_pool_mgr *poolm;
+-
++	
+ 	mutex_lock(&teedev->mutex);
+ 	idr_remove(&teedev->idr, shm->id);
+ 	if (shm->ctx)
+ 		list_del(&shm->link);
+ 	mutex_unlock(&teedev->mutex);
+-
+-	if (shm->flags & TEE_SHM_DMA_BUF)
+-		poolm = &teedev->pool->dma_buf_mgr;
+-	else
+-		poolm = &teedev->pool->private_mgr;
+-
+-	poolm->ops->free(poolm, shm);
+-	kfree(shm);
++        if (shm->flags & TEE_SHM_EXT_DMA_BUF) {
++ 		struct tee_shm_dmabuf_ref *ref;
++
++        ref = container_of(shm, struct tee_shm_dmabuf_ref, shm);
++ 		dma_buf_unmap_attachment(ref->attach, ref->sgt,
++ 					 DMA_BIDIRECTIONAL);
++ 		dma_buf_detach(shm->dmabuf, ref->attach);
++ 		dma_buf_put(ref->dmabuf);
++ 	} else {
++ 		struct tee_shm_pool_mgr *poolm;
++ 
++ 		if (shm->flags & TEE_SHM_DMA_BUF)
++ 			poolm = &teedev->pool->dma_buf_mgr;
++ 		else
++ 			poolm = &teedev->pool->private_mgr;
++ 
++ 		poolm->ops->free(poolm, shm);
++ 	}
++  
++ 	kfree(shm);
+ 
+ 	tee_device_put(teedev);
+ }
+@@ -190,6 +209,100 @@ struct tee_shm *tee_shm_alloc(struct tee_context *ctx, size_t size, u32 flags)
+ }
+ EXPORT_SYMBOL_GPL(tee_shm_alloc);
+ 
++struct tee_shm *tee_shm_register_fd(struct tee_context *ctx, int fd)
++ {
++ 	struct tee_shm_dmabuf_ref *ref;
++ 	void *rc;
++ 	DEFINE_DMA_BUF_EXPORT_INFO(exp_info);
++ 
++ 	if (!tee_device_get(ctx->teedev))
++ 		return ERR_PTR(-EINVAL);
++ 
++ 	ref = kzalloc(sizeof(*ref), GFP_KERNEL);
++ 	if (!ref) {
++ 		rc = ERR_PTR(-ENOMEM);
++ 		goto err;
++ 	}
++ 
++ 	ref->shm.ctx = ctx;
++ 	ref->shm.teedev = ctx->teedev;
++ 	ref->shm.id = -1;
++ 
++ 	ref->dmabuf = dma_buf_get(fd);
++ 	if (!ref->dmabuf) {
++ 		rc = ERR_PTR(-EINVAL);
++ 		goto err;
++ 	}
++ 
++ 	ref->attach = dma_buf_attach(ref->dmabuf, &ref->shm.teedev->dev);
++ 	if (IS_ERR_OR_NULL(ref->attach)) {
++ 		rc = ERR_PTR(-EINVAL);
++ 		goto err;
++ 	}
++ 
++ 	ref->sgt = dma_buf_map_attachment(ref->attach, DMA_BIDIRECTIONAL);
++ 	if (IS_ERR_OR_NULL(ref->sgt)) {
++ 		rc = ERR_PTR(-EINVAL);
++ 		goto err;
++ 	}
++ 
++ 	if (sg_nents(ref->sgt->sgl) != 1) {
++ 		rc = ERR_PTR(-EINVAL);
++ 		goto err;
++ 	}
++ 
++ 	ref->shm.paddr = sg_dma_address(ref->sgt->sgl);
++ 	ref->shm.size = sg_dma_len(ref->sgt->sgl);
++ 	ref->shm.flags = TEE_SHM_DMA_BUF | TEE_SHM_EXT_DMA_BUF;
++ 
++ 	mutex_lock(&ref->shm.teedev->mutex);
++ 	ref->shm.id = idr_alloc(&ref->shm.teedev->idr, &ref->shm,
++ 				1, 0, GFP_KERNEL);
++ 	mutex_unlock(&ref->shm.teedev->mutex);
++ 	if (ref->shm.id < 0) {
++ 		rc = ERR_PTR(ref->shm.id);
++ 		goto err;
++ 	}
++ 
++ 	/* export a dmabuf to later get a userland ref */
++ 	exp_info.ops = &tee_shm_dma_buf_ops;
++ 	exp_info.size = ref->shm.size;
++ 	exp_info.flags = O_RDWR;
++ 	exp_info.priv = &ref->shm;
++ 
++ 	ref->shm.dmabuf = dma_buf_export(&exp_info);
++ 	if (IS_ERR(ref->shm.dmabuf)) {
++ 		rc = ERR_PTR(-EINVAL);
++ 		goto err;
++ 	}
++ 
++ 	mutex_lock(&ref->shm.teedev->mutex);
++ 	list_add_tail(&ref->shm.link, &ctx->list_shm);
++ 	mutex_unlock(&ref->shm.teedev->mutex);
++ 
++ 	return &ref->shm;
++ 
++ err:
++ 	if (ref) {
++ 		if (ref->shm.id >= 0) {
++ 			mutex_lock(&ctx->teedev->mutex);
++ 			idr_remove(&ctx->teedev->idr, ref->shm.id);
++ 			mutex_unlock(&ctx->teedev->mutex);
++ 		}
++ 		if (ref->sgt)
++ 			dma_buf_unmap_attachment(ref->attach, ref->sgt,
++ 						 DMA_BIDIRECTIONAL);
++ 		if (ref->attach)
++ 			dma_buf_detach(ref->dmabuf, ref->attach);
++ 		if (ref->dmabuf)
++ 			dma_buf_put(ref->dmabuf);
++ 	}
++ 	kfree(ref);
++ 	tee_device_put(ctx->teedev);
++ 	return rc;
++ }
++ EXPORT_SYMBOL_GPL(tee_shm_register_fd);
++ 
+ /**
+  * tee_shm_get_fd() - Increase reference count and return file descriptor
+  * @shm:	Shared memory handle
+@@ -197,10 +310,9 @@ EXPORT_SYMBOL_GPL(tee_shm_alloc);
+  */
+ int tee_shm_get_fd(struct tee_shm *shm)
+ {
+-	u32 req_flags = TEE_SHM_MAPPED | TEE_SHM_DMA_BUF;
+-	int fd;
+ 
+-	if ((shm->flags & req_flags) != req_flags)
++	int fd;
++        if (!(shm->flags & TEE_SHM_DMA_BUF))
+ 		return -EINVAL;
+ 
+ 	fd = dma_buf_fd(shm->dmabuf, O_CLOEXEC);
+@@ -239,7 +351,9 @@ EXPORT_SYMBOL_GPL(tee_shm_free);
+ int tee_shm_va2pa(struct tee_shm *shm, void *va, phys_addr_t *pa)
+ {
+ 	/* Check that we're in the range of the shm */
+-	if ((char *)va < (char *)shm->kaddr)
++        if (!(shm->flags & TEE_SHM_MAPPED))
++ 		return -EINVAL;	
++        if ((char *)va < (char *)shm->kaddr)
+ 		return -EINVAL;
+ 	if ((char *)va >= ((char *)shm->kaddr + shm->size))
+ 		return -EINVAL;
+@@ -259,7 +373,9 @@ EXPORT_SYMBOL_GPL(tee_shm_va2pa);
+ int tee_shm_pa2va(struct tee_shm *shm, phys_addr_t pa, void **va)
+ {
+ 	/* Check that we're in the range of the shm */
+-	if (pa < shm->paddr)
++	if (!(shm->flags & TEE_SHM_MAPPED))
++ 		return -EINVAL;
++        if (pa < shm->paddr)
+ 		return -EINVAL;
+ 	if (pa >= (shm->paddr + shm->size))
+ 		return -EINVAL;
+@@ -284,6 +400,8 @@ EXPORT_SYMBOL_GPL(tee_shm_pa2va);
+  */
+ void *tee_shm_get_va(struct tee_shm *shm, size_t offs)
+ {
++        if (!(shm->flags & TEE_SHM_MAPPED))
++ 		return ERR_PTR(-EINVAL);
+ 	if (offs >= shm->size)
+ 		return ERR_PTR(-EINVAL);
+ 	return (char *)shm->kaddr + offs;
+diff --git a/include/linux/tee_drv.h b/include/linux/tee_drv.h
+index f5d5f45..cbc021f 100644
+--- a/include/linux/tee_drv.h
++++ b/include/linux/tee_drv.h
+@@ -25,8 +25,10 @@
+  * specific TEE driver.
+  */
+ 
+-#define TEE_SHM_MAPPED		0x1	/* Memory mapped by the kernel */
+-#define TEE_SHM_DMA_BUF		0x2	/* Memory with dma-buf handle */
++#define TEE_SHM_MAPPED		BIT(0)	/* Memory mapped by the kernel */
++#define TEE_SHM_DMA_BUF		BIT(1)	/* Memory with dma-buf handle */
++#define TEE_SHM_EXT_DMA_BUF	BIT(2)	/* Memory with dma-buf handle */
++
+ 
+ struct tee_device;
+ struct tee_shm;
+@@ -212,6 +214,16 @@ void *tee_get_drvdata(struct tee_device *teedev);
+ struct tee_shm *tee_shm_alloc(struct tee_context *ctx, size_t size, u32 flags);
+ 
+ /**
++ * tee_shm_register_fd() - Register shared memory from file descriptor
++  *
++  * @ctx:	Context that allocates the shared memory
++  * @fd:		shared memory file descriptor reference.
++  *
++  * @returns a pointer to 'struct tee_shm'
++  */
++ struct tee_shm *tee_shm_register_fd(struct tee_context *ctx, int fd);
++ 
++ /**
+  * tee_shm_free() - Free shared memory
+  * @shm:	Handle to shared memory to free
+  */
+diff --git a/include/uapi/linux/tee.h b/include/uapi/linux/tee.h
+index ddc476e..09226c0 100644
+--- a/include/uapi/linux/tee.h
++++ b/include/uapi/linux/tee.h
+@@ -116,6 +116,35 @@ struct tee_ioctl_shm_alloc_data {
+ 				     struct tee_ioctl_shm_alloc_data)
+ 
+ /**
++  * struct tee_ioctl_shm_register_fd_data - Shared memory registering argument
++  * @fd:		[in] file descriptor identifying the shared memory
++  * @size:	[out] Size of shared memory to allocate
++  * @flags:	[in] Flags to/from allocation.
++  * @id:		[out] Identifier of the shared memory
++  *
++  * The flags field should currently be zero as input. Updated by the call
++  * with actual flags as defined by TEE_IOCTL_SHM_* above.
++  * This structure is used as argument for TEE_IOC_SHM_ALLOC below.
++  */
++ struct tee_ioctl_shm_register_fd_data {
++ 	__s64 fd;
++ 	__u64 size;
++ 	__u32 flags;
++ 	__s32 id;
++ } __aligned(8);
++ 
++ /**
++  * TEE_IOC_SHM_REGISTER_FD - register a shared memory from a file descriptor
++  *
++  * Returns a file descriptor on success or < 0 on failure
++  *
++  * The returned file descriptor refers to the shared memory object in kernel
++  * land. The shared memory is freed when the descriptor is closed.
++  */
++ #define TEE_IOC_SHM_REGISTER_FD	_IOWR(TEE_IOC_MAGIC, TEE_IOC_BASE + 8, \
++ 				     struct tee_ioctl_shm_register_fd_data)
++ 
++ /**
+  * struct tee_ioctl_buf_data - Variable sized buffer
+  * @buf_ptr:	[in] A __user pointer to a buffer
+  * @buf_len:	[in] Length of the buffer above
+-- 
+2.7.4
+
