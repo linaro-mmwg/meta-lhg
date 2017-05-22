@@ -1,0 +1,402 @@
+From ca52f683ba0c9ade6a2a541d4ad203b0f7302c6d Mon Sep 17 00:00:00 2001
+From: jennifer111 <jie.mu@linaro.org>
+Date: Wed, 17 May 2017 09:34:37 +0200
+Subject: [PATCH] add secure heap
+
+Signed-off-by: jennifer111 <jie.mu@linaro.org>
+---
+ drivers/staging/android/ion/Kconfig             |  22 +++
+ drivers/staging/android/ion/Makefile            |   2 +
+ drivers/staging/android/ion/ion_dummy_driver.c  |  10 +
+ drivers/staging/android/ion/ion_heap.c          |   8 +-
+ drivers/staging/android/ion/ion_of.c            |   3 +-
+ drivers/staging/android/ion/ion_priv.h          |   3 +
+ drivers/staging/android/ion/ion_unmapped_heap.c | 236 ++++++++++++++++++++++++
+ drivers/staging/android/uapi/ion.h              |   3 +
+ 8 files changed, 285 insertions(+), 2 deletions(-)
+ create mode 100644 drivers/staging/android/ion/ion_unmapped_heap.c
+
+diff --git a/drivers/staging/android/ion/Kconfig b/drivers/staging/android/ion/Kconfig
+index c8fb413..851b806 100644
+--- a/drivers/staging/android/ion/Kconfig
++++ b/drivers/staging/android/ion/Kconfig
+@@ -52,3 +52,25 @@ config ION_OF
+ 	  extensions
+ 
+ 	  If using Ion and devicetree, you should say Y here
++
++config ION_DUMMY_UNMAPPED_HEAP
++	bool "ION dummy driver define an ION unmapped heap"
++	depends on ION_DUMMY
++	help
++	  Dummy ION driver will create a unmapped heap from physical
++	  location provided through CONFIG_ION_DUMMY_UNMAPPED_BASE and
++	  CONFIG_ION_DUMMY_UNMAPPED_SIZE.
++
++config ION_DUMMY_UNMAPPED_BASE
++	hex "Physical base address of the ION unmapped heap"
++	depends on ION_DUMMY_UNMAPPED_HEAP
++	help
++	  Allows one the statically define an unmapped heap from the
++	  ION dummy driver to exercice unamped heaps buffer managment.
++
++config ION_DUMMY_UNMAPPED_SIZE
++	hex "Physical byte size of the ION unmapped heap"
++	depends on ION_DUMMY_UNMAPPED_HEAP
++	help
++	  Allows one the statically define an unmapped heap from the
++	  ION dummy driver to exercice unamped heaps buffer managment.
+diff --git a/drivers/staging/android/ion/Makefile b/drivers/staging/android/ion/Makefile
+index 5d630a0..67c70a4 100644
+--- a/drivers/staging/android/ion/Makefile
++++ b/drivers/staging/android/ion/Makefile
+@@ -1,6 +1,8 @@
+ obj-$(CONFIG_ION) +=	ion.o ion-ioctl.o ion_heap.o \
+ 			ion_page_pool.o ion_system_heap.o \
+ 			ion_carveout_heap.o ion_chunk_heap.o ion_cma_heap.o
++obj-$(CONFIG_ION) += 	ion_unmapped_heap.o
++
+ obj-$(CONFIG_ION_TEST) += ion_test.o
+ ifdef CONFIG_COMPAT
+ obj-$(CONFIG_ION) += compat_ion.o
+diff --git a/drivers/staging/android/ion/ion_dummy_driver.c b/drivers/staging/android/ion/ion_dummy_driver.c
+index b23f2c7..c39009a 100644
+--- a/drivers/staging/android/ion/ion_dummy_driver.c
++++ b/drivers/staging/android/ion/ion_dummy_driver.c
+@@ -56,6 +56,16 @@ static struct ion_platform_heap dummy_heaps[] = {
+ 			.align	= SZ_16K,
+ 			.priv	= (void *)(SZ_16K),
+ 		},
++#ifdef CONFIG_ION_DUMMY_UNMAPPED_HEAP
++		{
++			.id	= ION_HEAP_TYPE_UNMAPPED,
++			.type	= ION_HEAP_TYPE_UNMAPPED,
++			.name	= "unmapped",
++			.base   = CONFIG_ION_DUMMY_UNMAPPED_BASE,
++			.size   = CONFIG_ION_DUMMY_UNMAPPED_SIZE,
++			.align	= SZ_4K,
++		},
++#endif
+ };
+ 
+ static struct ion_platform_data dummy_ion_pdata = {
+diff --git a/drivers/staging/android/ion/ion_heap.c b/drivers/staging/android/ion/ion_heap.c
+index 4e5c0f1..4a95e56 100644
+--- a/drivers/staging/android/ion/ion_heap.c
++++ b/drivers/staging/android/ion/ion_heap.c
+@@ -335,7 +335,10 @@ struct ion_heap *ion_heap_create(struct ion_platform_heap *heap_data)
+ 	case ION_HEAP_TYPE_DMA:
+ 		heap = ion_cma_heap_create(heap_data);
+ 		break;
+-	default:
++	case ION_HEAP_TYPE_UNMAPPED:
++		heap = ion_unmapped_heap_create(heap_data);
++		break;
++        default:
+ 		pr_err("%s: Invalid heap type %d\n", __func__,
+ 		       heap_data->type);
+ 		return ERR_PTR(-EINVAL);
+@@ -375,6 +378,9 @@ void ion_heap_destroy(struct ion_heap *heap)
+ 	case ION_HEAP_TYPE_DMA:
+ 		ion_cma_heap_destroy(heap);
+ 		break;
++	case ION_HEAP_TYPE_UNMAPPED:
++		ion_unmapped_heap_destroy(heap);
++		break;
+ 	default:
+ 		pr_err("%s: Invalid heap type %d\n", __func__,
+ 		       heap->type);
+diff --git a/drivers/staging/android/ion/ion_of.c b/drivers/staging/android/ion/ion_of.c
+index 46b2bb9..8fc73c3 100644
+--- a/drivers/staging/android/ion/ion_of.c
++++ b/drivers/staging/android/ion/ion_of.c
+@@ -60,7 +60,8 @@ static int ion_setup_heap_common(struct platform_device *parent,
+ 	switch (heap->type) {
+ 	case ION_HEAP_TYPE_CARVEOUT:
+ 	case ION_HEAP_TYPE_CHUNK:
+-		if (heap->base && heap->size)
++        case ION_HEAP_TYPE_UNMAPPED:		
++            if (heap->base && heap->size)
+ 			return 0;
+ 
+ 		ret = of_reserved_mem_device_init(heap->priv);
+diff --git a/drivers/staging/android/ion/ion_priv.h b/drivers/staging/android/ion/ion_priv.h
+index 3c3b324..6afd05d 100644
+--- a/drivers/staging/android/ion/ion_priv.h
++++ b/drivers/staging/android/ion/ion_priv.h
+@@ -387,6 +387,9 @@ void ion_chunk_heap_destroy(struct ion_heap *);
+ struct ion_heap *ion_cma_heap_create(struct ion_platform_heap *);
+ void ion_cma_heap_destroy(struct ion_heap *);
+ 
++struct ion_heap *ion_unmapped_heap_create(struct ion_platform_heap *pheap);
++void ion_unmapped_heap_destroy(struct ion_heap *heap);
++
+ /**
+  * functions for creating and destroying a heap pool -- allows you
+  * to keep a pool of pre allocated memory to use from your heap.  Keeping
+diff --git a/drivers/staging/android/ion/ion_unmapped_heap.c b/drivers/staging/android/ion/ion_unmapped_heap.c
+new file mode 100644
+index 0000000..21f6c13
+--- /dev/null
++++ b/drivers/staging/android/ion/ion_unmapped_heap.c
+@@ -0,0 +1,236 @@
++/*
++ * drivers/staging/android/ion/ion_unmapped_heap.c
++ *
++ * Copyright (C) 2016-2017 Linaro, Inc.
++ * Copyright (C) Allwinner 2014
++ * Author: <sunny@allwinnertech.com> for Allwinner.
++ *
++ * This software is licensed under the terms of the GNU General Public
++ * License version 2, as published by the Free Software Foundation, and
++ * may be copied, distributed, and modified under those terms.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ */
++
++/*
++ * ION heap type for handling physical memory heap not mapped
++ * in the linux-based OS.
++ *
++ * "unmapped heap" buffers are default not mapped but buffer owner
++ * can explicitly request mapping for some specific purpose.
++ *
++ * Based on Allwinner work (allocation thru gen_pool) and
++ * HiSilicon work (create ION heaps from DT nodes,
++ * Author: Chen Feng <puck.chen@hisilicon.com>).
++ */
++
++#include <linux/err.h>
++#include <linux/errno.h>
++#include <linux/genalloc.h>
++#include <linux/io.h>
++#include <linux/mm.h>
++#include <linux/module.h>
++#include <linux/of.h>
++#include <linux/platform_device.h>
++#include <linux/scatterlist.h>
++#include <linux/slab.h>
++#include <linux/spinlock.h>
++#include <linux/version.h>
++#include <linux/vmalloc.h>
++
++#include "ion.h"
++#include "ion_priv.h"
++
++struct ion_unmapped_heap {
++	struct ion_heap heap;
++	struct gen_pool *pool;
++	ion_phys_addr_t base;
++	size_t          size;
++};
++
++struct unmapped_buffer_priv {
++	ion_phys_addr_t base;
++};
++
++static ion_phys_addr_t get_buffer_base(struct unmapped_buffer_priv *priv)
++{
++	return priv->base;
++}
++
++static struct device *heap2dev(struct ion_heap *heap)
++{
++	return heap->dev->dev.this_device;
++}
++
++static ion_phys_addr_t ion_unmapped_allocate(struct ion_heap *heap,
++					   unsigned long size,
++					   unsigned long align,
++					   ion_phys_addr_t *addr)
++{
++	struct ion_unmapped_heap *umh =
++		container_of(heap, struct ion_unmapped_heap, heap);
++	unsigned long offset = gen_pool_alloc(umh->pool, size);
++
++	if (!offset) {
++		dev_err(heap2dev(heap),
++			"%s(%d) err: alloc 0x%08x bytes failed\n",
++			__func__, __LINE__, (u32)size);
++		return false;
++	}
++
++	*addr = offset;
++	return true;
++}
++
++static void ion_unmapped_free(struct ion_heap *heap, ion_phys_addr_t addr,
++			    unsigned long size)
++{
++	struct ion_unmapped_heap *umh =
++		container_of(heap, struct ion_unmapped_heap, heap);
++
++	gen_pool_free(umh->pool, addr, size);
++}
++
++static struct sg_table *ion_unmapped_heap_map_dma(struct ion_heap *heap,
++						struct ion_buffer *buffer)
++{
++	struct sg_table *table;
++	int ret;
++
++	table = kzalloc(sizeof(struct sg_table), GFP_KERNEL);
++	if (!table)
++		return ERR_PTR(-ENOMEM);
++	ret = sg_alloc_table(table, 1, GFP_KERNEL);
++	if (ret) {
++		kfree(table);
++		return ERR_PTR(ret);
++	}
++	sg_set_page(table->sgl,
++		    phys_to_page(get_buffer_base(buffer->priv_virt)),
++		    buffer->size, 0);
++
++	return table;
++}
++
++void ion_unmapped_heap_unmap_dma(struct ion_heap *heap,
++				struct ion_buffer *buffer)
++{
++	sg_free_table(buffer->sg_table);
++	kfree(buffer->sg_table);
++}
++
++
++static int ion_unmapped_heap_allocate(struct ion_heap *heap,
++				    struct ion_buffer *buffer,
++				    unsigned long size, unsigned long align,
++				    unsigned long flags)
++{
++	struct unmapped_buffer_priv *priv;
++	ion_phys_addr_t base;
++	int rc = -EINVAL;
++
++	if (!ion_unmapped_allocate(heap, size, align, &base))
++		return -ENOMEM;
++
++	priv = devm_kzalloc(heap2dev(heap), sizeof(*priv), GFP_KERNEL);
++	if (IS_ERR_OR_NULL(priv)) {
++		rc = -ENOMEM;
++		goto err;
++	}
++
++	priv->base = base;
++	buffer->size = roundup(size, PAGE_SIZE);
++	buffer->priv_virt = priv;
++
++	buffer->sg_table = ion_unmapped_heap_map_dma(heap, buffer);
++	if (!buffer->sg_table) {
++		rc = -ENOMEM;
++		goto err;
++	}
++	sg_dma_address(buffer->sg_table->sgl) = priv->base;
++	sg_dma_len(buffer->sg_table->sgl) = size;
++	return 0;
++err:
++	ion_unmapped_free(heap, base, size);
++	devm_kfree(heap2dev(heap), priv);
++	buffer->priv_virt = NULL;
++	return rc;
++}
++
++static void ion_unmapped_heap_free(struct ion_buffer *buffer)
++{
++	struct ion_heap *heap = buffer->heap;
++
++
++	ion_unmapped_heap_unmap_dma(heap, buffer);
++	ion_unmapped_free(heap, get_buffer_base(buffer->priv_virt),
++			 buffer->size);
++	devm_kfree(heap2dev(heap), buffer->priv_virt);
++	buffer->priv_virt = NULL;
++}
++
++static int ion_unmapped_heap_map_user(struct ion_heap *heap,
++				    struct ion_buffer *buffer,
++				    struct vm_area_struct *vma)
++{
++	ion_phys_addr_t pa = get_buffer_base(buffer->priv_virt);
++
++	/*
++	 * when user call ION_IOC_ALLOC not with ION_FLAG_CACHED, ion_mmap will
++	 * change vma->vm_page_prot to pgprot_writecombine itself, so we do not
++	 * need change to pgprot_writecombine here manually.
++	 */
++	return remap_pfn_range(vma, vma->vm_start,
++				__phys_to_pfn(pa) + vma->vm_pgoff,
++				vma->vm_end - vma->vm_start,
++				vma->vm_page_prot);
++}
++
++static struct ion_heap_ops unmapped_heap_ops = {
++	.allocate = ion_unmapped_heap_allocate,
++	.free = ion_unmapped_heap_free,
++	.map_user = ion_unmapped_heap_map_user,
++	.map_kernel = ion_heap_map_kernel,
++	.unmap_kernel = ion_heap_unmap_kernel,
++};
++
++struct ion_heap *ion_unmapped_heap_create(struct ion_platform_heap *pheap)
++{
++	struct ion_unmapped_heap *umh;
++
++	if (pheap->type != ION_HEAP_TYPE_UNMAPPED)
++		return NULL;
++
++	umh = kzalloc(sizeof(struct ion_unmapped_heap), GFP_KERNEL);
++	if (!umh)
++		return ERR_PTR(-ENOMEM);
++
++	umh->pool = gen_pool_create(PAGE_SHIFT, -1);
++	if (!umh->pool) {
++		kfree(umh);
++		return ERR_PTR(-ENOMEM);
++	}
++	umh->base = pheap->base;
++	umh->size = pheap->size;
++
++	gen_pool_add(umh->pool, umh->base, pheap->size, -1);
++	umh->heap.ops = &unmapped_heap_ops;
++	umh->heap.type = ION_HEAP_TYPE_UNMAPPED;
++
++	return &umh->heap;
++}
++EXPORT_SYMBOL(ion_unmapped_heap_create);
++
++void ion_unmapped_heap_destroy(struct ion_heap *heap)
++{
++	struct ion_unmapped_heap *umh =
++	     container_of(heap, struct  ion_unmapped_heap, heap);
++
++	gen_pool_destroy(umh->pool);
++	kfree(umh);
++	umh = NULL;
++}
++EXPORT_SYMBOL(ion_unmapped_heap_destroy);
+diff --git a/drivers/staging/android/uapi/ion.h b/drivers/staging/android/uapi/ion.h
+index 14cd873..d5693b6 100644
+--- a/drivers/staging/android/uapi/ion.h
++++ b/drivers/staging/android/uapi/ion.h
+@@ -30,6 +30,8 @@ typedef int ion_user_handle_t;
+  *				 carveout heap, allocations are physically
+  *				 contiguous
+  * @ION_HEAP_TYPE_DMA:		 memory allocated via DMA API
++ * @ION_HEAP_TYPE_UNMAPPED:	 memory not intended to be mapped into the
++ *				 linux address space unless for debug cases
+  * @ION_NUM_HEAPS:		 helper for iterating over heaps, a bit mask
+  *				 is used to identify the heaps, so only 32
+  *				 total heap types are supported
+@@ -40,6 +42,7 @@ enum ion_heap_type {
+ 	ION_HEAP_TYPE_CARVEOUT,
+ 	ION_HEAP_TYPE_CHUNK,
+ 	ION_HEAP_TYPE_DMA,
++        ION_HEAP_TYPE_UNMAPPED,
+ 	ION_HEAP_TYPE_CUSTOM, /*
+ 			       * must be last so device specific heaps always
+ 			       * are at the end of this enum
+-- 
+2.7.4
+
