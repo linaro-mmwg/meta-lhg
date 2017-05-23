@@ -1,0 +1,72 @@
+From 961993fde60ebd06715d1433f8eb265471a0f38c Mon Sep 17 00:00:00 2001
+From: Etienne Carriere <etienne.carriere@linaro.org>
+Date: Thu, 23 Mar 2017 14:03:05 +0100
+Subject: [PATCH 3/3] ion: unmapped heap support in ion dummy driver **not for
+ mainline**
+
+Add configuration ION_DUMMY_UNMAPPED_HEAP to enable optional definition
+of a statically defined "unmapped" heap for test purpose: kernel config
+must provide the memory pool base address and byte size.
+
+Signed-off-by: Etienne Carriere <etienne.carriere@linaro.org>
+Reviewed-by: Joakim Bech <joakim.bech@linaro.org>
+Signed-off-by: jennifer111 <jie.mu@linaro.org>
+---
+ drivers/staging/android/ion/Kconfig            | 22 ++++++++++++++++++++++
+ drivers/staging/android/ion/ion_dummy_driver.c | 10 ++++++++++
+ 2 files changed, 32 insertions(+)
+
+diff --git a/drivers/staging/android/ion/Kconfig b/drivers/staging/android/ion/Kconfig
+index c8fb413..851b806 100644
+--- a/drivers/staging/android/ion/Kconfig
++++ b/drivers/staging/android/ion/Kconfig
+@@ -52,3 +52,25 @@ config ION_OF
+ 	  extensions
+ 
+ 	  If using Ion and devicetree, you should say Y here
++
++config ION_DUMMY_UNMAPPED_HEAP
++	bool "ION dummy driver define an ION unmapped heap"
++	depends on ION_DUMMY
++	help
++	  Dummy ION driver will create a unmapped heap from physical
++	  location provided through CONFIG_ION_DUMMY_UNMAPPED_BASE and
++	  CONFIG_ION_DUMMY_UNMAPPED_SIZE.
++
++config ION_DUMMY_UNMAPPED_BASE
++	hex "Physical base address of the ION unmapped heap"
++	depends on ION_DUMMY_UNMAPPED_HEAP
++	help
++	  Allows one the statically define an unmapped heap from the
++	  ION dummy driver to exercice unamped heaps buffer managment.
++
++config ION_DUMMY_UNMAPPED_SIZE
++	hex "Physical byte size of the ION unmapped heap"
++	depends on ION_DUMMY_UNMAPPED_HEAP
++	help
++	  Allows one the statically define an unmapped heap from the
++	  ION dummy driver to exercice unamped heaps buffer managment.
+diff --git a/drivers/staging/android/ion/ion_dummy_driver.c b/drivers/staging/android/ion/ion_dummy_driver.c
+index b23f2c7..c39009a 100644
+--- a/drivers/staging/android/ion/ion_dummy_driver.c
++++ b/drivers/staging/android/ion/ion_dummy_driver.c
+@@ -56,6 +56,16 @@ static struct ion_platform_heap dummy_heaps[] = {
+ 			.align	= SZ_16K,
+ 			.priv	= (void *)(SZ_16K),
+ 		},
++#ifdef CONFIG_ION_DUMMY_UNMAPPED_HEAP
++		{
++			.id	= ION_HEAP_TYPE_UNMAPPED,
++			.type	= ION_HEAP_TYPE_UNMAPPED,
++			.name	= "unmapped",
++			.base   = CONFIG_ION_DUMMY_UNMAPPED_BASE,
++			.size   = CONFIG_ION_DUMMY_UNMAPPED_SIZE,
++			.align	= SZ_4K,
++		},
++#endif
+ };
+ 
+ static struct ion_platform_data dummy_ion_pdata = {
+-- 
+2.7.4
+
