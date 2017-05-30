@@ -1,0 +1,95 @@
+From c1b2d5c68ce73ee408391fae0703dab5b3233231 Mon Sep 17 00:00:00 2001
+From: Jerome Forissier <jerome.forissier@linaro.org>
+Date: Mon, 15 May 2017 13:46:08 +0200
+Subject: [PATCH 2/2] plat-hikey: configure and enable Secure Data Path by
+ default
+
+Reserve 4 MiB (0x3E800000 - 0x3EC00000) from the lower part of the DRAM
+area that is already reserved for OP-TEE by UEFI (0x3E000000 -
+0x40000000) to serve as the Secure Data Path pool.
+
+A 2 MiB space is left between the top of this area and the NW/SW shared
+memory, because we need the SDP area to be 4 MiB-aligned in order to
+be protected by the memory firewall (protection is handled by ARM
+Trusted Firmware [4] and is not strictly required for SDP to work).
+
+To use SDP with Linux on HiKey, you need a modified ION driver [1]
+which is available in the Linaro repository [2], and the following
+configuration [3]:
+
+CONFIG_STAGING=y
+CONFIG_ION=y
+CONFIG_ION_DUMMY=y
+CONFIG_ION_DUMMY_UNMAPPED_HEAP=y
+CONFIG_ION_DUMMY_UNMAPPED_BASE=0x3e800000
+CONFIG_ION_DUMMY_UNMAPPED_SIZE=0x00400000
+CONFIG_ANDROID=y
+CONFIG_ANDROID_TIMED_OUTPUT=n
+CONFIG_ANDROID_LOW_MEMORY_KILLER=n
+
+[1] https://github.com/linaro-swg/linux/compare/e31dd54997^...961993fde6
+[2] https://github.com/linaro-swg/linux/tree/optee
+[3] https://github.com/OP-TEE/build/pull/145
+[4] https://github.com/96boards-hikey/arm-trusted-firmware/pull/13
+
+Signed-off-by: Jerome Forissier <jerome.forissier@linaro.org>
+Acked-by: Etienne Carriere <etienne.carriere@linaro.org>
+Acked-by: Jens Wiklander <jens.wiklander@linaro.org>
+---
+ core/arch/arm/plat-hikey/conf.mk           |  4 ++++
+ core/arch/arm/plat-hikey/platform_config.h | 20 ++++++++++++++------
+ 2 files changed, 18 insertions(+), 6 deletions(-)
+
+diff --git a/core/arch/arm/plat-hikey/conf.mk b/core/arch/arm/plat-hikey/conf.mk
+index 8a8ef2f..2b2c986 100644
+--- a/core/arch/arm/plat-hikey/conf.mk
++++ b/core/arch/arm/plat-hikey/conf.mk
+@@ -40,3 +40,7 @@ endif
+ ifeq ($(CFG_PL061),y)
+ core-platform-cppflags		+= -DPLAT_PL061_MAX_GPIOS=160
+ endif
++
++CFG_SECURE_DATA_PATH ?= y
++CFG_TEE_SDP_MEM_BASE ?= 0x3E800000
++CFG_TEE_SDP_MEM_SIZE ?= 0x00400000
+diff --git a/core/arch/arm/plat-hikey/platform_config.h b/core/arch/arm/plat-hikey/platform_config.h
+index a990b67..d09c8e8 100644
+--- a/core/arch/arm/plat-hikey/platform_config.h
++++ b/core/arch/arm/plat-hikey/platform_config.h
+@@ -72,9 +72,13 @@
+  *    TEE RAM: 1 MiB (CFG_TEE_RAM_VA_SIZE)    |
+  *  0x3F00_0000 [TZDRAM_BASE, BL32_LOAD_ADDR] -
+  *    Shared memory: 2 MiB                    |
+- *  0x3EE0_0000                               |
+- *    Reserved by UEFI for OP-TEE, unused     | DRAM0
+- *  0x3E00_0000                               |
++ *  0x3EE0_0000                               | DRAM0
++ *    Reserved by UEFI for OP-TEE, unused     |
++ *  0x3EC0_0000                               -
++ *    Secure Data Path buffers: 4 MiB         | DRAM0 (secure)
++ *  0x3E80_0000 [CFG_TEE_SDP_MEM_BASE]        -
++ *    Reserved by UEFI for OP-TEE, unused     |
++ *  0x3E00_0000                               | DRAM0
+  *    Available to Linux                      |
+  *  0x0000_0000 [DRAM0_BASE]                  -
+  *
+@@ -88,9 +92,13 @@
+  *    TEE RAM: 200 KiB                        | TZSRAM
+  *  0x3F00_0000 [TZSRAM_BASE, BL32_LOAD_ADDR] -
+  *    Shared memory: 2 MiB                    |
+- *  0x3EE0_0000                               |
+- *    Reserved by UEFI for OP-TEE, unused     | DRAM0
+- *  0x3E00_0000                               |
++ *  0x3EE0_0000                               | DRAM0
++ *    Reserved by UEFI for OP-TEE, unused     |
++ *  0x3EC0_0000                               -
++ *    Secure Data Path buffers: 4 MiB         | DRAM0 (secure)
++ *  0x3E80_0000 [CFG_TEE_SDP_MEM_BASE]        -
++ *    Reserved by UEFI for OP-TEE, unused     |
++ *  0x3E00_0000                               | DRAM0
+  *    Available to Linux                      |
+  *  0x0000_0000 [DRAM0_BASE]                  -
+  */
+-- 
+1.9.1
+
