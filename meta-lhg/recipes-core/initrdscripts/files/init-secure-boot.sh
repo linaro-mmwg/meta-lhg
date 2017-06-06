@@ -5,50 +5,54 @@ PATH=/sbin:/bin:/usr/sbin:/usr/bin
 tmproot="/root"
 rootpath="/root"
 
-#mkdir /proc
-#mkdir /sys
 mount -t proc proc /proc
 mount -t sysfs sysfs /sys
 mount -t devtmpfs none /dev
 
-
-
+#added for extracting certificate from efi variable
+mount -t efivarfs none /sys/firmware/efi/efivars
+cat /sys/firmware/efi/efivars/RdkRootCertificate* > root.crt
+dd if=root.crt of=temp.crt bs=1 skip=4
+mv temp.crt root.crt
+mkdir /root
+#mv root.crt /root
+echo "root.crt file created"
 
 read_args() {
-    [ -z "$CMDLINE" ] && CMDLINE=`cat /proc/cmdline`
-    for arg in $CMDLINE; do
-        optarg=`expr "x$arg" : 'x[^=]*=\(.*\)'`
-        case $arg in
-            root=*)
-                ROOT_DEVICE=$optarg ;;
-            rootimage=*)
-                ROOT_IMAGE=$optarg ;;
-            rootfstype=*)
-                modprobe $optarg 2> /dev/null ;;
-            LABEL=*)
-                label=$optarg ;;
-            video=*)
-                video_mode=$arg ;;
-            vga=*)
-                vga_mode=$arg ;;
-            console=*)
-                if [ -z "${console_params}" ]; then
-                    console_params=$arg
-                else
-                    console_params="$console_params $arg"
-                fi ;;
-            debugshell*)
-                if [ -z "$optarg" ]; then
-                        shelltimeout=30
-                else
-                        shelltimeout=$optarg
-                fi
-        esac
-    done
+	[ -z "$CMDLINE" ] && CMDLINE=`cat /proc/cmdline`
+	for arg in $CMDLINE; do
+		optarg=`expr "x$arg" : 'x[^=]*=\(.*\)'`
+		case $arg in
+			root=*)
+				ROOT_DEVICE=$optarg ;;
+			rootimage=*)
+				ROOT_IMAGE=$optarg ;;
+			rootfstype=*)
+				modprobe $optarg 2> /dev/null ;;
+			LABEL=*)
+				label=$optarg ;;
+			video=*)
+				video_mode=$arg ;;
+			vga=*)
+				vga_mode=$arg ;;
+			console=*)
+				if [ -z "${console_params}" ]; then
+					console_params=$arg
+				else
+					console_params="$console_params $arg"
+				fi ;;
+			debugshell*)
+				if [ -z "$optarg" ]; then
+					shelltimeout=30
+				else
+					shelltimeout=$optarg
+				fi
+		esac
+	done
 }
 
 modprobe isofs 2> /dev/null
-mkdir -p /run  
+mkdir -p /run
 mkdir -p /var/run
 udevd &
 
@@ -60,53 +64,40 @@ killall udevd
 read_args
 
 mount -o rw,loop,noatime,nodiratime $ROOT_DEVICE $tmproot
+cp /root.crt root/
 
-file1= "$tmproot/proc"
-if [ -f "$file1" ]
-then
-   echo "rootfs is extracted"
+file1="$tmproot/proc"
+if [ -d "$file1" ]; then
+	echo 'Rootfs available already... Mounting rootfs...'
 else
-  rm $tmproot/IsSign
+	cd $tmproot
 
-cd $tmproot
-#
-file="$tmproot/IsSign"
-if [ -f "$file" ]
-then
-	echo "Signed and mounetd."
-else
-cat <<EOF >$tmproot/command.sh
-openssl dgst -sha256 -verify <(openssl x509 -in root.crt  -pubkey -noout) -signature *.sha256 *.tar.xz
+	file="$tmproot/IsSign"
+	cat <<EOF > $tmproot/command.sh
+	openssl dgst -sha256 -verify <(openssl x509 -in root.crt  -pubkey -noout) -signature *.sha256 *.tar.gz
 EOF
-cat command.sh
-bash command.sh >IsSign
-str=$(cat $file)
-#  echo "$str printing this"
-   if [ "$str" = 'Verified OK' ]
-   then
-      echo "Rootfs tar is having valid signature"
-    tar xf $tmproot/*.tar.xz
-   else
-      echo "not valid Rootfs....."
-      rm $tmproot/IsSign
-   fi
-
-
+	bash command.sh >$file
+	str=$(cat $file)
+	if [ "$str" = 'Verified OK' ]; then
+		echo "Rootfs tar is having valid signature"
+		echo "Extracting root fs ..."
+		tar xvzf $tmproot/*.tar.gz
+		sync
+                echo "Rootfs extracted"
+	else
+		echo "not valid Rootfs....."
+		exit
+	fi
 fi
-fi
-#cat <<EOF >/root/command.sh
-#openssl dgst -sha256 -verify <(openssl x509 -in root.crt  -pubkey -noout) -signature *.sha256 *.tar.bz2
-#EOF
-#cat command.sh
-#bash command.sh >IsSign
-
-#tar jxf *.tar.bz2
 
 mount -n --move /proc $rootpath/proc
 mount -n --move /sys $rootpath/sys
 mount -n --move /dev $rootpath/dev
 
-#cd /root
-
 exec switch_root -c /dev/console $rootpath /sbin/init
 
+if [ $? -eq 0 ]; then
+	echo 'switch root success'
+else
+	exec sh
+fi
