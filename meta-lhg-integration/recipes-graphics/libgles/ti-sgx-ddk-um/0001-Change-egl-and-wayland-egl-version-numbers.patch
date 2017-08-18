@@ -1,9 +1,13 @@
 From 33531a448003c7e167939c2f647afbb316ee7ba4 Mon Sep 17 00:00:00 2001
 From: Andrey Konovalov <andrey.konovalov@linaro.org>
 Date: Wed, 28 Sep 2016 11:55:03 -0700
-Subject: [PATCH] [HACK] bump up egl's and wayland-egl's version numbers
+Subject: [PATCH] Change egl and wayland-egl version numbers
 
-.. to make Chromium build system happy.
+According to the sources, the driver supports EGL_VERSION_1_4.
+So the version must be 14.x.x follow the mesa versioning rules.
+The current version value of 8.14 looks wrong, as it confuses
+other packages configuration scripts. E.g. chromium refuses to build
+with EGL version 8.14.
 
 Signed-off-by: Andrey Konovalov <andrey.konovalov@linaro.org>
 ---
@@ -20,7 +24,7 @@ index 1f26003..8b8028d 100644
  Name: EGL
  Description: PowerVR EGL library
 -Version: 8.14
-+Version: 12.12.12
++Version: 14.0.8
  Libs: -L${libdir} -lEGL -lIMGegl -ldrm_omap -lsrv_um
  Cflags: -I${includedir}
 diff --git a/targetfs/jacinto6evm/lib/pkgconfig/wayland-egl.pc b/targetfs/jacinto6evm/lib/pkgconfig/wayland-egl.pc
@@ -32,7 +36,7 @@ index 01163c6..529100a 100644
  Name: pvr_wlegl
  Description: PowerVR pvr_wlegl library
 -Version: 8.14
-+Version: 12.12.12
++Version: 14.0.8
  Libs: -L${libdir} -lpvr_wlegl 
  Cflags: -I${includedir}
 -- 
