@@ -3,7 +3,7 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 inherit systemd
 
 SRC_URI_append = " \
-    file://0001-HACK-bump-up-egl-s-and-wayland-egl-s-version-numbers.patch \
+    file://0001-Change-egl-and-wayland-egl-version-numbers.patch \
     file://rc.pvr.service \
     "
 
