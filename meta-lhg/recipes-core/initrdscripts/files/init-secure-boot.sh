@@ -81,7 +81,7 @@ EOF
 	if [ "$str" = 'Verified OK' ]; then
 		echo "Rootfs tar is having valid signature"
 		echo "Extracting root fs ..."
-		tar xvzf $tmproot/*.tar.gz
+		tar xzf $tmproot/*.tar.gz
 		sync
                 echo "Rootfs extracted"
 	else
