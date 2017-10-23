@@ -1,0 +1,12 @@
+diff -uprN edk2-a/OpenPlatformPkg/Drivers/Usb/DwUsbHostDxe/DwUsbHostDxe.c edk2-b/OpenPlatformPkg/Drivers/Usb/DwUsbHostDxe/DwUsbHostDxe.c
+--- edk2-a/OpenPlatformPkg/Drivers/Usb/DwUsbHostDxe/DwUsbHostDxe.c	2017-10-20 13:17:56.141735302 +0000
++++ edk2-b/OpenPlatformPkg/Drivers/Usb/DwUsbHostDxe/DwUsbHostDxe.c	2017-10-20 13:19:47.897774224 +0000
+@@ -164,7 +164,7 @@ Wait4AnyBit (
+ 	IN UINT32     Timeout // in milliseconds
+     )
+ {
+-    UINT32  Value;
++    UINT32  Value = 0;
+ 	Timeout *= 1000; // we want this in microseconds
+     DEBUG ((EFI_D_VERBOSE, "Wait4AnyBit \n"));
+ 
