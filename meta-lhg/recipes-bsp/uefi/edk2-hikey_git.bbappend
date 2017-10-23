@@ -22,6 +22,32 @@ do_compile_prepend() {
     cp -r ${EDK2_DIR}/../openssl-1.0.2j ${EDK2_DIR}/CryptoPkg/Library/OpensslLib
 }
 
+do_compile() {
+    # Add in path to native sysroot to find uuid/uuid.h
+    sed -i -e 's:-I \.\.:-I \.\. -I ${STAGING_INCDIR_NATIVE} :' ${S}/BaseTools/Source/C/Makefiles/header.makefile
+    # ... and the library itself
+    sed -i -e 's: -luuid: -luuid -L ${STAGING_LIBDIR_NATIVE}:g' ${S}/BaseTools/Source/C/*/GNUmakefile
+
+    ${EDK2_DIR}/uefi-tools/uefi-build.sh -T ${AARCH64_TOOLCHAIN} -b DEBUG -a ${EDK2_DIR}/atf ${OPTEE_OS_ARG} ${UEFIMACHINE}
+}
+
+do_install() {
+    install -D -p -m0644 ${EDK2_DIR}/atf/build/${UEFIMACHINE}/release/bl1.bin ${D}${libdir}/edk2/bl1.bin
+
+    # Install grub configuration
+    sed -e "s|@DISTRO|${DISTRO}|" \
+        -e "s|@KERNEL_IMAGETYPE|${KERNEL_IMAGETYPE}|" \
+        -e "s|@CMDLINE|${CMDLINE}|" \
+        < ${WORKDIR}/grub.cfg.in \
+        > ${WORKDIR}/grub.cfg
+    install -D -p -m0644 ${WORKDIR}/grub.cfg ${D}/boot/grub/grub.cfg
+}
+
+do_deploy_prepend() {
+    mkdir -p ${EDK2_DIR}/Build/HiKey/RELEASE_${AARCH64_TOOLCHAIN}/AARCH64
+    touch ${EDK2_DIR}/Build/HiKey/RELEASE_${AARCH64_TOOLCHAIN}/AARCH64/AndroidFastbootApp.efi
+}
+
 SRC_URI_append_hikey = " \
     file://0001-edk2-remove-warning.patch \
 "
