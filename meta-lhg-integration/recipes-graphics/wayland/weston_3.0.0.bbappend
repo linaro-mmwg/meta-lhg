@@ -1,15 +1,10 @@
 # When configured for fbdev compositor, make it the default
-PACKAGECONFIG[fbdev] = "--enable-fbdev-compositor WESTON_NATIVE_BACKEND="fbdev-backend.so",--disable-fbdev-compositor,udev mtdev"
-PACKAGECONFIG[kms] = "--enable-drm-compositor,--disable-drm-compositor,drm udev libgbm mtdev"
-
-PR_append = ".arago22"
+PACKAGECONFIG[fbdev] := "--enable-fbdev-compositor ${@bb.utils.contains('MACHINE_FEATURES', 'sgx', 'WESTON_NATIVE_BACKEND="fbdev-backend.so"', '', d)},--disable-fbdev-compositor,udev mtdev"
+PACKAGECONFIG[kms] := "--enable-drm-compositor,--disable-drm-compositor,drm udev ${@bb.utils.contains('MACHINE_FEATURES', 'sgx', 'libgbm', 'virtual/mesa', d)} mtdev"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
-RDEPENDS_${PN} += "weston-conf"
-
-
-SRC_URI += " \
+SRC_URI_append_omap-a15 = " \
 "
 
 #	file://0001-udev-seat-restrict-udev-enumeration-to-card0.patch
