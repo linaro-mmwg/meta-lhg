@@ -8,8 +8,6 @@ SRC_URI_append = " \
     "
 
 do_install_append () {
-    (cd ${D}/${libdir} && ln -sf libGLESv2.so libGLESv2.so.2)
-
     sed -i -e s:/usr/bin:${bindir}:g ${WORKDIR}/rc.pvr.service
     install -d ${D}/lib/systemd/system/
     install -m 0644 ${WORKDIR}/rc.pvr.service ${D}/lib/systemd/system
