@@ -13,7 +13,7 @@ GSTREAMER_ACCEL_MM_append_dra7xx = "${@bb.utils.contains('MACHINE_FEATURES', 'mm
 CORE_IMAGE_BASE_INSTALL += " \
     ffmpeg \
     libexif \
-    ${@bb.utils.contains('MACHINE_FEATURES', 'optee', 'optee-aes-decryptor ocdmi portmap', '', d)} \
+    ${@bb.utils.contains('MACHINE_FEATURES', 'optee', 'optee-aes-decryptor ocdmi rpcbind', '', d)} \
     ${ACCEL_FW} \
     ${GSTREAMER_ACCEL_MM} \
     "

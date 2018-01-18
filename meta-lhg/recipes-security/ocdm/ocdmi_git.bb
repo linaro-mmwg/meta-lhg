@@ -21,7 +21,7 @@ EXTRA_OECONF_append = "${@bb.utils.contains('MACHINE_FEATURES', 'optee', '--enab
 # Only ClearKey implementation depends on ssl:
 DEPENDS_append = " \
     ${@bb.utils.contains('PACKAGECONFIG','--enable-playready','','openssl',d)} \
-    portmap \
+    rpcbind \
     ${@bb.utils.contains('MACHINE_FEATURES','optee','optee-aes-decryptor','',d)} \
 "
 
