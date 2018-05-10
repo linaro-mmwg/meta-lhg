@@ -16,12 +16,19 @@ SRCREV = "${AUTOREV}"
 S = "${WORKDIR}/git"
 B = "${S}"
 
+OPTEE_ARCH ?= "arm32"
+OPTEE_ARCH_armv7a = "arm32"
+OPTEE_ARCH_aarch64 = "arm64"
+
+OPTEE_EXPORT_USERTA_DIR ?= "export-user_ta"
+OPTEE_EXPORT_USERTA_DIR_mx8mq = "export-user_ta_${OPTEE_ARCH}"
+
 #stub
 do_configure[noexec] = "1"
 
 EXTRA_OEMAKE = ""
 do_compile() {
-    export TA_DEV_KIT_DIR=${STAGING_INCDIR}/optee/export-user_ta
+    export TA_DEV_KIT_DIR=${STAGING_INCDIR}/optee/${OPTEE_EXPORT_USERTA_DIR}
     export TEEC_EXPORT=${STAGING_DIR_HOST}/usr
 
     oe_runmake -C ${S}/host LDFLAGS=""
