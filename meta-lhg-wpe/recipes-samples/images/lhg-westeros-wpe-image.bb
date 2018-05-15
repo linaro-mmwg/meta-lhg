@@ -13,6 +13,12 @@ CORE_IMAGE_BASE_INSTALL += " \
     westeros-simplebuffer \
     westeros-simpleshell \
     westeros-soc \
+    optee-os \
+    optee-client \
+    optee-aes-decryptor \
+    portmap \
+    ocdmi \
+    opencdm \
     wpewebkit \
     wpebackend-rdk \
     wpelauncher \
