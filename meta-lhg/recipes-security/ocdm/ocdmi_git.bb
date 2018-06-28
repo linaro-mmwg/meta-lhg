@@ -16,6 +16,8 @@ EXTRA_OECONF_append = "${@bb.utils.contains('MACHINE_FEATURES', 'optee', '--enab
 
 # * --enable-playready : Enables support for Playready CDMI.
 #
+# * --enable-sdp : Enable support for Secure Data Path in CDMI.
+#
 # * --enable-debug : Builds OCDM with debug symbols and verbose logging.
 
 # Only ClearKey implementation depends on ssl:
