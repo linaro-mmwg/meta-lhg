@@ -4,6 +4,7 @@ PACKAGECONFIG[use-ocdm] = ""
 
 OCDM_GIT_BRANCH="chromium-53.0.2785.143"
 OCDM_DESTSUFIX="ocdm"
+EXTERNAL_OCDM_DESTSUFIX="media/cdm/ppapi/external_open_cdm"
 
 #This is deliberately separated from CHROMIUM_BUILD_TYPE so we can
 #easily enable debug builds of just the OpenCDM plugin for symbolic
@@ -23,7 +24,7 @@ python add_ocdm_patches() {
 }
 
 copy_ocdm_files() {
-    cp -r ${WORKDIR}/ocdm ${S}/media/cdm/ppapi/external_open_cdm
+    cp -r ${WORKDIR}/ocdm ${S}/${EXTERNAL_OCDM_DESTSUFIX}
 }
 
 do_patch[prefuncs] += "${@bb.utils.contains('PACKAGECONFIG', 'use-ocdm', 'add_ocdm_patches', '', d)}"
