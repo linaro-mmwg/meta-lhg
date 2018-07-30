@@ -34,4 +34,6 @@ FILES_SOLIBSDEV = ""
 FILES_${PN} += "${libdir}/*.so"
 FILES_${PN} += "${includedir}/*.h"
 
+INSANE_SKIP_${PN} = "ldflags"
+
 PARALLEL_MAKE = ""
