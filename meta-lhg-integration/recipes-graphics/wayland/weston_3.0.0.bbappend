@@ -1,5 +1,3 @@
-# When configured for fbdev compositor, make it the default
-PACKAGECONFIG[fbdev] := "--enable-fbdev-compositor ${@bb.utils.contains('MACHINE_FEATURES', 'sgx', 'WESTON_NATIVE_BACKEND="fbdev-backend.so"', '', d)},--disable-fbdev-compositor,udev mtdev"
 PACKAGECONFIG[kms] := "--enable-drm-compositor,--disable-drm-compositor,drm udev ${@bb.utils.contains('MACHINE_FEATURES', 'sgx', 'libgbm', 'virtual/mesa', d)} mtdev"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
