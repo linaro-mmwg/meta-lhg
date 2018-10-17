@@ -21,7 +21,7 @@ OPTEE_ARCH_armv7a = "arm32"
 OPTEE_ARCH_aarch64 = "arm64"
 
 OPTEE_EXPORT_USERTA_DIR ?= "export-user_ta"
-OPTEE_EXPORT_USERTA_DIR_mx8mq = "export-user_ta_${OPTEE_ARCH}"
+OPTEE_EXPORT_USERTA_DIR_imx = "export-user_ta_${OPTEE_ARCH}"
 
 #stub
 do_configure[noexec] = "1"
