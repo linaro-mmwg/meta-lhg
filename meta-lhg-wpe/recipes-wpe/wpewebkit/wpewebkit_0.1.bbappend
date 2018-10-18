@@ -14,8 +14,8 @@ SRC_URI_remove = " \
             file://0001-Reduce-stack-limits.patch \
            "
 
-RDEPS_VIDEO_remove_mx8 = " gstreamer1.0-plugins-good-souphttpsrc"
-RDEPS_VIDEO_append_mx8 = " gstreamer1.0-plugins-good-soup"
+RDEPS_VIDEO_remove_imx = " gstreamer1.0-plugins-good-souphttpsrc"
+RDEPS_VIDEO_append_imx = " gstreamer1.0-plugins-good-soup"
 
 # removing commercial plugins 
 RDEPS_EXTRA_remove = " \
