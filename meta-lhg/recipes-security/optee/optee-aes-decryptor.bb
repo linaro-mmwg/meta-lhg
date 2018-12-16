@@ -10,7 +10,7 @@ DEPENDS = "optee-os optee-client"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
-SRC_URI = "git://github.com/linaro-home/optee-clearkey-cdmi;protocol=https"
+SRC_URI = "git://github.com/linaro-mmwg/optee-clearkey-cdmi;protocol=https"
 SRCREV = "${AUTOREV}"
 
 S = "${WORKDIR}/git"

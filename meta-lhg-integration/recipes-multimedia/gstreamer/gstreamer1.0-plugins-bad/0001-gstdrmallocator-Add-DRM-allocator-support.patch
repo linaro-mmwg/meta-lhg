@@ -1,6 +1,6 @@
-From c5d115bf88f0d2fb64f58b21b72a3195eae98d0a Mon Sep 17 00:00:00 2001
-From: Pooja Prajod <a0132412@ti.com>
-Date: Fri, 20 Jan 2017 14:41:45 +0530
+From b425588c6ab12b1728f05f6f32071636661110bb Mon Sep 17 00:00:00 2001
+From: Ramprasad N <x0038811@ti.com>
+Date: Thu, 18 Jan 2018 16:49:11 +0530
 Subject: [PATCH 1/5] gstdrmallocator: Add DRM allocator support
 
 Add DRM based allocator support.
@@ -12,6 +12,7 @@ dmabuf allocation.
 3. Allocate GstMemory objects with mem_type as 'dmabuf'
 
 Signed-off-by: Pooja Prajod <a0132412@ti.com>
+Signed-off-by: Ramprasad N <x0038811@ti.com>
 ---
  configure.ac                              |   5 +
  gst-libs/gst/Makefile.am                  |   4 +-
@@ -29,10 +30,10 @@ Signed-off-by: Pooja Prajod <a0132412@ti.com>
  create mode 100644 pkgconfig/gstreamer-drm.pc.in
 
 diff --git a/configure.ac b/configure.ac
-index 5e85e56..e254605 100644
+index 30e26b8..9310114 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -621,6 +621,8 @@ if test x$with_egl_module_name != x; then
+@@ -611,6 +611,8 @@ if test x$with_egl_module_name != x; then
    AC_DEFINE_UNQUOTED(GST_GL_LIBEGL_MODULE_NAME, "$with_egl_module_name", [EGL module name])
  fi
  
@@ -41,7 +42,7 @@ index 5e85e56..e254605 100644
  AC_ARG_ENABLE([wgl],
       [  --enable-wgl            Enable WGL support @<:@default=auto@:>@],
       [case "${enableval}" in
-@@ -3590,6 +3592,7 @@ gst-libs/Makefile
+@@ -3576,6 +3578,7 @@ gst-libs/Makefile
  gst-libs/gst/Makefile
  gst-libs/gst/adaptivedemux/Makefile
  gst-libs/gst/basecamerabinsrc/Makefile
@@ -49,7 +50,7 @@ index 5e85e56..e254605 100644
  gst-libs/gst/gl/Makefile
  gst-libs/gst/gl/android/Makefile
  gst-libs/gst/gl/cocoa/Makefile
-@@ -3749,6 +3752,8 @@ pkgconfig/gstreamer-plugins-bad.pc
+@@ -3733,6 +3736,8 @@ pkgconfig/gstreamer-plugins-bad.pc
  pkgconfig/gstreamer-plugins-bad-uninstalled.pc
  pkgconfig/gstreamer-codecparsers.pc
  pkgconfig/gstreamer-codecparsers-uninstalled.pc
@@ -59,27 +60,24 @@ index 5e85e56..e254605 100644
  pkgconfig/gstreamer-insertbin-uninstalled.pc
  pkgconfig/gstreamer-gl.pc
 diff --git a/gst-libs/gst/Makefile.am b/gst-libs/gst/Makefile.am
-index 7d0b309..5ec3967 100644
+index 338f708..b7a9007 100644
 --- a/gst-libs/gst/Makefile.am
 +++ b/gst-libs/gst/Makefile.am
-@@ -11,7 +11,7 @@ WAYLAND_DIR=wayland
+@@ -15,12 +15,12 @@ OPENCV_DIR=opencv
  endif
  
  SUBDIRS = uridownloader adaptivedemux interfaces basecamerabinsrc codecparsers \
--	 insertbin mpegts base video audio player $(GL_DIR) $(WAYLAND_DIR)
-+	 insertbin mpegts base video audio player drm $(GL_DIR) $(WAYLAND_DIR)
+-	 insertbin mpegts base video audio player allocators $(GL_DIR) $(WAYLAND_DIR) \
++	 insertbin mpegts base video audio player allocators drm $(GL_DIR) $(WAYLAND_DIR) \
+ 	 $(OPENCV_DIR)
  
  noinst_HEADERS = gst-i18n-plugin.h gettext.h glib-compat-private.h
  DIST_SUBDIRS = uridownloader adaptivedemux interfaces gl basecamerabinsrc \
-@@ -24,7 +24,7 @@ adaptivedemux: uridownloader
+-	codecparsers insertbin mpegts wayland opencv base video audio player allocators
++	codecparsers insertbin mpegts wayland opencv base video audio player allocators drm
  
- INDEPENDENT_SUBDIRS = \
- 	interfaces basecamerabinsrc codecparsers insertbin uridownloader \
--	mpegts base player $(GL_DIR) $(WAYLAND_DIR)
-+	mpegts base player drm $(GL_DIR) $(WAYLAND_DIR)
- 
- .PHONY: independent-subdirs $(INDEPENDENT_SUBDIRS)
- 
+ #dependencies
+ video, audio: base
 diff --git a/gst-libs/gst/drm/Makefile.am b/gst-libs/gst/drm/Makefile.am
 new file mode 100644
 index 0000000..9a45dfb
@@ -415,7 +413,7 @@ index 0000000..1ca93ba
 +
 +#endif /* __GSTDRMALLOCATOR_H__ */
 diff --git a/pkgconfig/Makefile.am b/pkgconfig/Makefile.am
-index 88c7e52..5fdccbf 100644
+index 99e6332..f90c322 100644
 --- a/pkgconfig/Makefile.am
 +++ b/pkgconfig/Makefile.am
 @@ -2,6 +2,7 @@
@@ -426,7 +424,7 @@ index 88c7e52..5fdccbf 100644
  	gstreamer-codecparsers-@GST_API_VERSION@.pc \
  	gstreamer-insertbin-@GST_API_VERSION@.pc \
  	gstreamer-mpegts-@GST_API_VERSION@.pc \
-@@ -12,6 +13,7 @@ pcverfiles =  \
+@@ -13,6 +14,7 @@ pcverfiles =  \
  
  pcverfiles_uninstalled = \
  	gstreamer-plugins-bad-@GST_API_VERSION@-uninstalled.pc \
@@ -434,7 +432,7 @@ index 88c7e52..5fdccbf 100644
  	gstreamer-codecparsers-@GST_API_VERSION@-uninstalled.pc \
  	gstreamer-insertbin-@GST_API_VERSION@-uninstalled.pc \
  	gstreamer-mpegts-@GST_API_VERSION@-uninstalled.pc \
-@@ -43,6 +45,7 @@ pkgconfig_DATA = $(pcverfiles)
+@@ -59,6 +61,7 @@ pkgconfig_DATA = $(pcverfiles)
  CLEANFILES = $(pcverfiles) $(pcverfiles_uninstalled)
  pcinfiles = \
             gstreamer-plugins-bad.pc.in gstreamer-plugins-bad-uninstalled.pc.in \

@@ -1,7 +1,7 @@
-From c748e947ff35c4137178aef9bf229e0c67952982 Mon Sep 17 00:00:00 2001
-From: Pooja Prajod <a0132412@ti.com>
-Date: Fri, 20 Jan 2017 14:57:29 +0530
-Subject: [PATCH 2/5] parsers: Pick previos bug fixes on different parsers
+From e44c23a75544aa4eea9a151b8d7a5168de86c0da Mon Sep 17 00:00:00 2001
+From: Ramprasad N <x0038811@ti.com>
+Date: Thu, 18 Jan 2018 17:01:37 +0530
+Subject: [PATCH 2/5] parsers: Pick bug fixes on different parsers
 
 The following bug fixes which were previously identified are picked :
 1. Increase rank for vc1parse and jpegparse
@@ -9,6 +9,7 @@ The following bug fixes which were previously identified are picked :
 3. Fix create() width and height calculation on h264parse
 
 Signed-off-by: Pooja Prajod <a0132412@ti.com>
+Signed-off-by: Ramprasad N <x0038811@ti.com>
 ---
  gst/jpegformat/gstjpegformat.c        |  2 +-
  gst/jpegformat/gstjpegparse.c         |  2 +-
@@ -32,7 +33,7 @@ index b410466..ecb9311 100644
      return FALSE;
    if (!gst_element_register (plugin, "jifmux", GST_RANK_SECONDARY,
 diff --git a/gst/jpegformat/gstjpegparse.c b/gst/jpegformat/gstjpegparse.c
-index 77e53a6..5bfba7b 100644
+index dd684d7..2682afb 100644
 --- a/gst/jpegformat/gstjpegparse.c
 +++ b/gst/jpegformat/gstjpegparse.c
 @@ -151,7 +151,7 @@ gst_jpeg_parse_class_init (GstJpegParseClass * klass)
@@ -45,10 +46,10 @@ index 77e53a6..5bfba7b 100644
        "Arnout Vandecappelle (Essensium/Mind) <arnout@mind.be>");
  
 diff --git a/gst/videoparsers/gsth264parse.c b/gst/videoparsers/gsth264parse.c
-index 05b6b75..6fe2914 100644
+index 10543ea..ebea0f9 100644
 --- a/gst/videoparsers/gsth264parse.c
 +++ b/gst/videoparsers/gsth264parse.c
-@@ -162,7 +162,7 @@ static void
+@@ -161,7 +161,7 @@ static void
  gst_h264_parse_init (GstH264Parse * h264parse)
  {
    h264parse->frame_out = gst_adapter_new ();
@@ -56,8 +57,8 @@ index 05b6b75..6fe2914 100644
 +  gst_base_parse_set_pts_interpolation (GST_BASE_PARSE (h264parse), TRUE);
    GST_PAD_SET_ACCEPT_INTERSECT (GST_BASE_PARSE_SINK_PAD (h264parse));
    GST_PAD_SET_ACCEPT_TEMPLATE (GST_BASE_PARSE_SINK_PAD (h264parse));
- }
-@@ -1722,13 +1722,8 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
+ 
+@@ -1778,13 +1778,8 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
      gint fps_num, fps_den;
      gint par_n, par_d;
  
@@ -73,16 +74,16 @@ index 05b6b75..6fe2914 100644
  
      if (G_UNLIKELY (h264parse->width != crop_width ||
              h264parse->height != crop_height)) {
-@@ -1762,7 +1757,7 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
-     }
+@@ -1819,7 +1814,7 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
  
      if (G_UNLIKELY (modified || h264parse->update_caps)) {
+       GstVideoInterlaceMode imode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
 -      gint width, height;
 +      gint width=0, height=0;
        GstClockTime latency;
  
        const gchar *caps_mview_mode = NULL;
-@@ -1774,16 +1769,13 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
+@@ -1831,16 +1826,13 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
  
        caps = gst_caps_copy (sink_caps);
  
@@ -103,10 +104,10 @@ index 05b6b75..6fe2914 100644
        if (s == NULL ||
            !gst_structure_get_fraction (s, "pixel-aspect-ratio", &par_n,
 diff --git a/gst/videoparsers/gstmpeg4videoparse.c b/gst/videoparsers/gstmpeg4videoparse.c
-index a1fd3b2..7912254 100644
+index 38e1f45..49434c7 100644
 --- a/gst/videoparsers/gstmpeg4videoparse.c
 +++ b/gst/videoparsers/gstmpeg4videoparse.c
-@@ -185,7 +185,7 @@ gst_mpeg4vparse_init (GstMpeg4VParse * parse)
+@@ -183,7 +183,7 @@ gst_mpeg4vparse_init (GstMpeg4VParse * parse)
    parse->interval = DEFAULT_CONFIG_INTERVAL;
    parse->last_report = GST_CLOCK_TIME_NONE;
  
@@ -116,10 +117,10 @@ index a1fd3b2..7912254 100644
    GST_PAD_SET_ACCEPT_TEMPLATE (GST_BASE_PARSE_SINK_PAD (parse));
  }
 diff --git a/gst/videoparsers/gstmpegvideoparse.c b/gst/videoparsers/gstmpegvideoparse.c
-index bf71a3e..f203cca 100644
+index 6896339..cd87838 100644
 --- a/gst/videoparsers/gstmpegvideoparse.c
 +++ b/gst/videoparsers/gstmpegvideoparse.c
-@@ -175,7 +175,7 @@ gst_mpegv_parse_init (GstMpegvParse * parse)
+@@ -173,7 +173,7 @@ gst_mpegv_parse_init (GstMpegvParse * parse)
  {
    parse->config_flags = FLAG_NONE;
  
@@ -129,10 +130,10 @@ index bf71a3e..f203cca 100644
    GST_PAD_SET_ACCEPT_TEMPLATE (GST_BASE_PARSE_SINK_PAD (parse));
  }
 diff --git a/gst/videoparsers/plugin.c b/gst/videoparsers/plugin.c
-index 79d1df6..fb866b5 100644
+index 2deddf4..c622b50 100644
 --- a/gst/videoparsers/plugin.c
 +++ b/gst/videoparsers/plugin.c
-@@ -51,7 +51,7 @@ plugin_init (GstPlugin * plugin)
+@@ -54,7 +54,7 @@ plugin_init (GstPlugin * plugin)
    ret |= gst_element_register (plugin, "h265parse",
        GST_RANK_SECONDARY, GST_TYPE_H265_PARSE);
    ret |= gst_element_register (plugin, "vc1parse",

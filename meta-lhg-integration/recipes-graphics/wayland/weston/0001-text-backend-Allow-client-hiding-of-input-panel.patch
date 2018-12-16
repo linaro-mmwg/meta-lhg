@@ -1,0 +1,98 @@
+From dd61625d18b85ec63495b2e23c6c1191d91e09c7 Mon Sep 17 00:00:00 2001
+From: Joshua Watt <jpewhacker@gmail.com>
+Date: Sat, 24 Jun 2017 16:03:41 -0500
+Subject: [PATCH] text-backend: Allow client hiding of input panel
+
+Previously, the hide_input_panel and show_input_panel messages for the text
+input protocol were limited to specific cases, such as showing the panel on
+activation, or making the panel visible after activation. Now, clients are
+allowed to toggle the panel visiblity at will as long as they are the currently
+active client
+
+Signed-off-by: Joshua Watt <JPEWhacker@gmail.com>
+Tested-by: Silvan Jegen <s.jegen@gmail.com>
+Reviewed-by: Jan Arne Petersen <janarne@gmail.com>
+---
+ compositor/text-backend.c | 22 ++++++++++++----------
+ 1 file changed, 12 insertions(+), 10 deletions(-)
+
+diff --git a/compositor/text-backend.c b/compositor/text-backend.c
+index e10f957..e6ee249 100644
+--- a/compositor/text-backend.c
++++ b/compositor/text-backend.c
+@@ -65,7 +65,7 @@ struct text_input_manager {
+ 	struct wl_global *text_input_manager_global;
+ 	struct wl_listener destroy_listener;
+ 
+-	struct text_input *current_panel;
++	struct text_input *current_text_input;
+ 
+ 	struct weston_compositor *ec;
+ };
+@@ -141,11 +141,15 @@ deactivate_input_method(struct input_method *input_method)
+ 	input_method->context = NULL;
+ 
+ 	if (wl_list_empty(&text_input->input_methods) &&
+-	    text_input->input_panel_visible) {
++	    text_input->input_panel_visible &&
++	    text_input->manager->current_text_input == text_input) {
+ 		wl_signal_emit(&ec->hide_input_panel_signal, ec);
+ 		text_input->input_panel_visible = false;
+-		text_input->manager->current_panel = NULL;
+ 	}
++
++	if (text_input->manager->current_text_input == text_input)
++		text_input->manager->current_text_input = NULL;
++
+ 	zwp_text_input_v1_send_leave(text_input->resource);
+ }
+ 
+@@ -207,12 +211,11 @@ text_input_activate(struct wl_client *client,
+ 
+ 	input_method_context_create(text_input, input_method);
+ 
+-	current = text_input->manager->current_panel;
++	current = text_input->manager->current_text_input;
+ 
+ 	if (current && current != text_input) {
+ 		current->input_panel_visible = false;
+ 		wl_signal_emit(&ec->hide_input_panel_signal, ec);
+-		text_input->manager->current_panel = NULL;
+ 	}
+ 
+ 	if (text_input->input_panel_visible) {
+@@ -220,8 +223,8 @@ text_input_activate(struct wl_client *client,
+ 			       text_input->surface);
+ 		wl_signal_emit(&ec->update_input_panel_signal,
+ 			       &text_input->cursor_rectangle);
+-		text_input->manager->current_panel = text_input;
+ 	}
++	text_input->manager->current_text_input = text_input;
+ 
+ 	zwp_text_input_v1_send_enter(text_input->resource,
+ 				     text_input->surface->resource);
+@@ -336,7 +339,8 @@ text_input_show_input_panel(struct wl_client *client,
+ 
+ 	text_input->input_panel_visible = true;
+ 
+-	if (!wl_list_empty(&text_input->input_methods)) {
++	if (!wl_list_empty(&text_input->input_methods) &&
++	    text_input == text_input->manager->current_text_input) {
+ 		wl_signal_emit(&ec->show_input_panel_signal,
+ 			       text_input->surface);
+ 		wl_signal_emit(&ec->update_input_panel_signal,
+@@ -354,10 +358,8 @@ text_input_hide_input_panel(struct wl_client *client,
+ 	text_input->input_panel_visible = false;
+ 
+ 	if (!wl_list_empty(&text_input->input_methods) &&
+-	    text_input == text_input->manager->current_panel) {
+-		text_input->manager->current_panel = NULL;
++	    text_input == text_input->manager->current_text_input)
+ 		wl_signal_emit(&ec->hide_input_panel_signal, ec);
+-	}
+ }
+ 
+ static void
+-- 
+2.7.4
+
