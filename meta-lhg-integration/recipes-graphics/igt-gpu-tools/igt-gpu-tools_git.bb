@@ -10,13 +10,13 @@ inherit autotools gtk-doc
 SRCREV = "${AUTOREV}"
 
 SRC_URI = "git://gitlab.freedesktop.org/drm/igt-gpu-tools.git;protocol=https  \
-           file://0001-igt-run-script.patch \
+           file://0001-Add-another-path-of-testlist.patch \
 "
 
 S = "${WORKDIR}/git"
 
-DEPENDS += "libdrm libpciaccess cairo udev glib-2.0 procps libunwind kmod openssl libxmlrpc gsl elfutils python3-mako"
-RDEPENDS_${PN} += "bash"
+DEPENDS += "libdrm libpciaccess cairo udev glib-2.0 procps libunwind kmod openssl xmlrpc-c gsl elfutils"
+RDEPENDS_${PN} += "bash python3-mako"
 
 PACKAGE_BEFORE_PN = "${PN}-benchmarks"
 
