@@ -1,0 +1,30 @@
+From 539205653011a152916cbcc7e9e82738725cbd17 Mon Sep 17 00:00:00 2001
+From: Arthur She <arthur.she@linaro.org>
+Date: Mon, 25 Mar 2019 10:03:31 +0800
+Subject: [PATCH 1/1] Add another path of testlist.
+
+This patch adds another path of test list which is the place the
+igt-gpu-tools been installed in the target.
+
+Signed-off-by: Arthur She <arthur.she@linaro.org>
+---
+ scripts/run-tests.sh | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/scripts/run-tests.sh b/scripts/run-tests.sh
+index 4209dd8c..3438555e 100755
+--- a/scripts/run-tests.sh
++++ b/scripts/run-tests.sh
+@@ -30,7 +30,8 @@ PIGLIT=`which piglit 2> /dev/null`
+ 
+ if [ -z "$IGT_TEST_ROOT" ]; then
+ 	paths=("$ROOT/build/tests/test-list.txt"
+-	       "$ROOT/tests/test-list.txt")
++	       "$ROOT/tests/test-list.txt"
++	       "/usr/libexec/igt-gpu-tools/test-list.txt")
+ 	for p in "${paths[@]}"; do
+ 		if [ -f "$p" ]; then
+ 			echo "Found test list: \"$p\""
+-- 
+2.17.1
+

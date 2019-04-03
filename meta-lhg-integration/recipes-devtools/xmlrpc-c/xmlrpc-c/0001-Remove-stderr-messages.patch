@@ -1,0 +1,44 @@
+From 5f383c250eca51480eae5656bcd91c486e966012 Mon Sep 17 00:00:00 2001
+From: Arthur She <arthur.she@linaro.org>
+Date: Mon, 25 Mar 2019 10:12:44 +0800
+Subject: [PATCH 1/1] Remove stderr messages
+
+The message comes from stderr will contaminate the test results of
+igt-gpu-tools.
+
+Signed-off-by: Arthur She <arthur.she@linaro.org>
+---
+ src/xmlrpc_string.c | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/src/xmlrpc_string.c b/src/xmlrpc_string.c
+index 2da61e4..fc9913a 100644
+--- a/src/xmlrpc_string.c
++++ b/src/xmlrpc_string.c
+@@ -746,15 +746,12 @@ stringNew(xmlrpc_env *     const envP,
+           enum crTreatment const crTreatment,
+           xmlrpc_value **  const valPP) {
+ 
+-    fprintf(stderr, "stringNew entered\n");
+     xmlrpc_value * valP;
+ 
+     xmlrpc_validate_utf8(envP, value, length);
+ 
+     if (!envP->fault_occurred) {
+-        fprintf(stderr, "Going to xmlrpc_createXmlrpcValue\n");
+         xmlrpc_createXmlrpcValue(envP, &valP);
+-        fprintf(stderr, "Back from createXmlrpcValue\n");
+ 
+         if (!envP->fault_occurred) {
+             valP->_type = XMLRPC_TYPE_STRING;
+@@ -774,7 +771,6 @@ stringNew(xmlrpc_env *     const envP,
+                 *valPP = valP;
+         }
+     }
+-    fprintf(stderr, "stringNew exiting\n");
+ }
+ 
+ 
+-- 
+2.17.1
+
