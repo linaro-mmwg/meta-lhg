@@ -1,0 +1,25 @@
+From 4ab7f4a95e924c39db1520aaffd9cea30aa8d843 Mon Sep 17 00:00:00 2001
+From: Alexandre Jutras <alexandre.jutras@nxp.com>
+Date: Fri, 15 Mar 2019 11:48:41 -0400
+Subject: [PATCH] Configure dependency to pthread
+
+Signed-off-by: Alexandre Jutras <alexandre.jutras@nxp.com>
+---
+ Makefile.am | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Makefile.am b/Makefile.am
+index 695fbbe..9b9aef9 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -34,6 +34,7 @@ kmscube_CFLAGS = \
+ 	-O0 -g \
+ 	-Wall -Wextra \
+ 	-std=c11      \
++	-pthread      \
+ 	$(DRM_CFLAGS) \
+ 	$(GBM_CFLAGS) \
+ 	$(EGL_CFLAGS) \
+-- 
+2.7.4
+
