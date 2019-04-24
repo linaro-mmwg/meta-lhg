@@ -1,7 +1,7 @@
 SUMMARY = "IGT GPU Tools"
 DESCRIPTION = "IGT GPU Tools is a collection of tools for development and testing of the DRM drivers"
 
-LIC_FILES_CHKSUM = "file://COPYING;md5=e4b3dd344780e0400593b21b115a6947"
+LIC_FILES_CHKSUM = "file://COPYING;md5=67bfee4df38fa6ecbe3a675c552d4c08"
 
 LICENSE_append = " & ISC"
 
