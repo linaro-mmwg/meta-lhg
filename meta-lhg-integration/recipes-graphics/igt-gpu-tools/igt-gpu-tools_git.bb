@@ -15,17 +15,14 @@ SRC_URI = "git://gitlab.freedesktop.org/drm/igt-gpu-tools.git;protocol=https  \
 
 S = "${WORKDIR}/git"
 
-DEPENDS += "libdrm libpciaccess cairo udev glib-2.0 procps libunwind kmod openssl xmlrpc-c gsl elfutils"
+DEPENDS += "libdrm libpciaccess cairo udev glib-2.0 procps libunwind kmod openssl xmlrpc-c gsl elfutils alsa-lib"
 RDEPENDS_${PN} += "bash python3-mako"
 
 PACKAGE_BEFORE_PN = "${PN}-benchmarks"
 
-EXTRA_OECONF = "--enable-chamelium --disable-intel --disable-amdgpu --enable-tests"
+EXTRA_OECONF = "--enable-chamelium --disable-intel --disable-amdgpu"
 COMPATIBLE_HOST = "(x86_64.*|i.86.*|arm.*|aarch64).*-linux"
 COMPATIBLE_HOST_libc-musl_class-target = "null"
-
-PACKAGECONFIG ??= ""
-PACKAGECONFIG[audio] = "--enable-audio,--disable-audio,alsa-lib gsl"
 
 gputools_sysroot_preprocess() {
 	rm -f ${SYSROOT_DESTDIR}${libdir}/pkgconfig/intel-gen4asm.pc
