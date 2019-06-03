@@ -1,0 +1,31 @@
+From b52531d3a7037d4f1d3fb8c6bf8a80e6c9094f5a Mon Sep 17 00:00:00 2001
+From: Arthur <arthur.she@linaro.org>
+Date: Sat, 11 May 2019 19:33:01 -0700
+Subject: [PATCH] Make it cross-compileable
+
+This version of configure is not friendly for cross-compile.
+It doesn't take config options, so we are not able to pass '--host' or
+'--target' to it. Move '$CC" to the front of compile candidate list and
+pass cross-compile through it when run 'configure' will do the trick.
+
+Signed-off-by: Arthur She <arthur.she@linaro.org>
+---
+ configure | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/configure b/configure
+index 7fec3a1..b7b9527 100755
+--- a/configure
++++ b/configure
+@@ -39,7 +39,7 @@ int main(int, char **) {
+ }
+ EOF
+ CXX=unknown;
+-for i in "CC" "g++" "cc" "$CC"; do
++for i in "$CC" "CC" "g++" "cc" ; do
+   if $i -c $tmp_file.C 2>/dev/null; then
+     CXX="$i";
+     break;
+-- 
+2.17.1
+

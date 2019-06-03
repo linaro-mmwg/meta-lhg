@@ -1,0 +1,37 @@
+Consider $(DESTDIR) when installing the files.
+
+Change $(BINDIR) and $(MANDIR) to match the default FILES_${PN}[-doc].
+
+Workaround: don't strip html2text binary, as it fails with
+"strip: Unable to recognise the format of the input file".
+
+Create the directories before installing the files into them.
+
+--- html2text-1.3.2a.orig/Makefile.in	2019-05-30 12:55:39.251906575 +0200
++++ html2text-1.3.2a/Makefile.in	2019-05-30 12:56:35.347826141 +0200
+@@ -29,9 +29,9 @@
+ YFLAGS   =
+ 
+ INSTALLER = install
+-BINDIR    = /usr/local/bin
+-MANDIR    = /usr/local/man
+-DOCDIR    = /usr/share/doc/html2text
++BINDIR    = $(DESTDIR)/usr/bin
++MANDIR    = $(DESTDIR)/usr/share/man
++DOCDIR    = $(DESTDIR)/usr/share/doc/html2text
+ 
+ CXX                 = @CXX@
+ BOOL_DEFINITION     = @BOOL_DEFINITION@
+@@ -88,8 +88,11 @@
+ # This is mostly thought for RPM builts and users that don't read the documentation.
+ 
+ install :
+-	$(INSTALLER) -s -m 755 html2text $(BINDIR);
++	$(INSTALLER) -d -m 755 $(BINDIR);
++	$(INSTALLER) -m 755 html2text $(BINDIR);
++	$(INSTALLER) -d -m 755 $(MANDIR)/man1;
+ 	$(INSTALLER) -m 644 html2text.1.gz $(MANDIR)/man1;
++	$(INSTALLER) -d -m 755 $(MANDIR)/man5;
+ 	$(INSTALLER) -m 644 html2textrc.5.gz $(MANDIR)/man5;
+ 	$(INSTALLER) -d -m 755 $(DOCDIR);
+ 	$(INSTALLER) -p -m 644 CHANGES COPYING CREDITS KNOWN_BUGS README RELEASE_NOTES TODO $(DOCDIR)
