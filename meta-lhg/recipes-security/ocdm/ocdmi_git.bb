@@ -1,3 +1,4 @@
+
 #
 # This file was derived from the 'Hello World!' example recipe in the
 # Yocto Project Development Manual.
@@ -12,7 +13,12 @@ SRCREV_pn-ocdmi ?= "${AUTOREV}"
 
 S = "${WORKDIR}/git"
 
-EXTRA_OECONF_append = "${@bb.utils.contains('MACHINE_FEATURES', 'optee', '--enable-aes-ta', '', d)} "
+CFLAGS += "-I${STAGING_INCDIR}/tirpc"
+CPPFLAGS += "-I${STAGING_INCDIR}/tirpc"
+
+inherit autotools pkgconfig
+
+EXTRA_OECONF_append = "${@bb.utils.contains('MACHINE_FEATURES', 'optee', ' --enable-aes-ta', '', d)} "
 
 # * --enable-playready : Enables support for Playready CDMI.
 #
@@ -25,4 +31,5 @@ DEPENDS_append = " \
     ${@bb.utils.contains('MACHINE_FEATURES','optee','optee-aes-decryptor','',d)} \
 "
 
-inherit autotools
+PACKAGECONFIG ??= "rpc"
+PACKAGECONFIG[rpc] = "--enable-tirpc,--disable-tirpc,libtirpc"
