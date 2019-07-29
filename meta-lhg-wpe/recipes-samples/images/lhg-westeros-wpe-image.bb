@@ -12,6 +12,9 @@ CORE_IMAGE_BASE_INSTALL += " \
     wpebackend-rdk \
     wpeframework \
     wpeframework-plugins \
+    wpeframework-ui \
+    wpewebkit-web-inspector-plugin \
+    libwpe \
 "
 
 CORE_IMAGE_BASE_INSTALL_remove = " \
