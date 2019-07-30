@@ -15,4 +15,6 @@ CORE_IMAGE_BASE_INSTALL_remove = " \
     weston-init \
 "
 
-EXTRA_USERS_PARAMS = " "
+EXTRA_USERS_PARAMS += "\
+usermod -a -G video linaro; \
+"
