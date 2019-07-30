@@ -6,7 +6,7 @@ LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=22b593390e65f8d23beaa6ef10ed6392"
 PR="r0"
 PV="1.0+git"
 
-DEPENDS = "optee-os optee-client"
+DEPENDS = "${OPTEE_PACKAGES}"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
