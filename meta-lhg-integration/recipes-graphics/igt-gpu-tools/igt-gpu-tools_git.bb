@@ -9,9 +9,7 @@ inherit autotools gtk-doc
 
 SRCREV = "${AUTOREV}"
 
-SRC_URI = "git://gitlab.freedesktop.org/drm/igt-gpu-tools.git;protocol=https  \
-           file://0001-Add-another-path-of-testlist.patch \
-"
+SRC_URI = "git://gitlab.freedesktop.org/drm/igt-gpu-tools.git;protocol=https"
 
 S = "${WORKDIR}/git"
 
