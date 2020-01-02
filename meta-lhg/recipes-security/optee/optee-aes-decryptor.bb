@@ -19,9 +19,16 @@ B = "${S}"
 #stub
 do_configure[noexec] = "1"
 
+OPTEE_ARCH ?= ""
+OPTEE_ARCH_aarch64 = "arm64"
+
+OPTEE_EXPORT_USERTA_DIR ?= "export-user_ta"
+OPTEE_EXPORT_USERTA_DIR_mx8 = "export-user_ta_${OPTEE_ARCH}"
+
+
 EXTRA_OEMAKE = ""
 do_compile() {
-    export TA_DEV_KIT_DIR=${STAGING_INCDIR}/optee/export-user_ta
+    export TA_DEV_KIT_DIR=${STAGING_INCDIR}/optee/${OPTEE_EXPORT_USERTA_DIR}
     export TEEC_EXPORT=${STAGING_DIR_HOST}/usr
 
     oe_runmake -C ${S}/host LDFLAGS=""
