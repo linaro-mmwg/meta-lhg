@@ -6,6 +6,8 @@ LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=22b593390e65f8d23beaa6ef10ed6392"
 PR="r0"
 PV="1.0+git"
 
+OPTEE_PACKAGES ?= "optee-os optee-client"
+
 DEPENDS = "${OPTEE_PACKAGES}"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
@@ -41,6 +43,7 @@ do_install() {
     mkdir -p ${D}/lib/optee_armtz
     install -d ${D}/${libdir}
     install -m 0644 ${S}/host/*.a ${D}/${libdir}/
+    install -m 0644 ${S}/host/*.so ${D}/${libdir}/
 
     install -d ${D}${includedir}
     install -m 0644 ${S}/host/*.h ${D}${includedir}/
@@ -50,7 +53,10 @@ do_install() {
 }
 
 
-FILES_${PN} = "${libdir}/*.a  /usr/bin /lib/optee_armtz/"
+FILES_${PN} = "${libdir}/*.a ${libdir}/*.so /usr/bin /lib/optee_armtz/"
 FILES_${PN}-staticdev = "${libdir}/*.a"
+FILES_${PN}-dev = "${libdir}/*.so"
+
+INSANE_SKIP_${PN}-dev += "dev-elf"
 
 INHIBIT_PACKAGE_STRIP = "1"
