@@ -14,7 +14,7 @@ SRC_URI = "git://gitlab.freedesktop.org/drm/igt-gpu-tools.git;protocol=https"
 S = "${WORKDIR}/git"
 
 DEPENDS += "libdrm libpciaccess cairo udev glib-2.0 procps libunwind kmod openssl xmlrpc-c gsl elfutils alsa-lib"
-RDEPENDS_${PN} += "bash python3-mako python3-six git"
+RDEPENDS_${PN} += "bash python python3-mako python3-six git net-snmp"
 
 PACKAGE_BEFORE_PN = "${PN}-benchmarks"
 
