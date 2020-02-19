@@ -1,7 +1,7 @@
 SUMMARY = "IGT GPU Tools"
 DESCRIPTION = "IGT GPU Tools is a collection of tools for development and testing of the DRM drivers"
 
-LIC_FILES_CHKSUM = "file://COPYING;md5=e4b3dd344780e0400593b21b115a6947"
+LIC_FILES_CHKSUM = "file://COPYING;md5=67bfee4df38fa6ecbe3a675c552d4c08"
 
 LICENSE_append = " & ISC"
 
@@ -13,17 +13,14 @@ SRC_URI = "git://gitlab.freedesktop.org/drm/igt-gpu-tools.git;protocol=https"
 
 S = "${WORKDIR}/git"
 
-DEPENDS += "libdrm libpciaccess cairo udev glib-2.0 procps libunwind kmod openssl xmlrpc-c gsl elfutils"
-RDEPENDS_${PN} += "bash python3-mako"
+DEPENDS += "libdrm libpciaccess cairo udev glib-2.0 procps libunwind kmod openssl xmlrpc-c gsl elfutils alsa-lib"
+RDEPENDS_${PN} += "bash python python3-mako python3-six git net-snmp"
 
 PACKAGE_BEFORE_PN = "${PN}-benchmarks"
 
-EXTRA_OECONF = "--enable-chamelium --disable-intel --disable-amdgpu --enable-tests"
+EXTRA_OECONF = "--enable-chamelium --disable-intel --disable-amdgpu"
 COMPATIBLE_HOST = "(x86_64.*|i.86.*|arm.*|aarch64).*-linux"
 COMPATIBLE_HOST_libc-musl_class-target = "null"
-
-PACKAGECONFIG ??= ""
-PACKAGECONFIG[audio] = "--enable-audio,--disable-audio,alsa-lib gsl"
 
 gputools_sysroot_preprocess() {
 	rm -f ${SYSROOT_DESTDIR}${libdir}/pkgconfig/intel-gen4asm.pc
