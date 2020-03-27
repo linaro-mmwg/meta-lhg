@@ -5,7 +5,7 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=67bfee4df38fa6ecbe3a675c552d4c08"
 
 LICENSE_append = " & ISC"
 
-inherit autotools gtk-doc
+inherit meson gtk-doc
 
 SRCREV = "${AUTOREV}"
 
@@ -13,12 +13,12 @@ SRC_URI = "git://gitlab.freedesktop.org/drm/igt-gpu-tools.git;protocol=https"
 
 S = "${WORKDIR}/git"
 
-DEPENDS += "libdrm libpciaccess cairo udev glib-2.0 procps libunwind kmod openssl xmlrpc-c gsl elfutils alsa-lib"
-RDEPENDS_${PN} += "bash python python3-mako python3-six git net-snmp"
+DEPENDS += "libdrm libpciaccess cairo udev glib-2.0 procps libunwind kmod openssl xmlrpc-c gsl elfutils alsa-lib json-c bison-native"
+RDEPENDS_${PN} += "bash python3-mako python3-six git net-snmp"
 
 PACKAGE_BEFORE_PN = "${PN}-benchmarks"
 
-EXTRA_OECONF = "--enable-chamelium --disable-intel --disable-amdgpu"
+EXTRA_OEMESON = "-Ddocs=disabled -Dchamelium=enabled"
 COMPATIBLE_HOST = "(x86_64.*|i.86.*|arm.*|aarch64).*-linux"
 COMPATIBLE_HOST_libc-musl_class-target = "null"
 
