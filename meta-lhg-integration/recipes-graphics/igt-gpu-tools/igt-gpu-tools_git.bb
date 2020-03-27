@@ -18,7 +18,7 @@ RDEPENDS_${PN} += "bash python3-mako python3-six git net-snmp"
 
 PACKAGE_BEFORE_PN = "${PN}-benchmarks"
 
-EXTRA_OEMESON = "-Ddocs=disabled -Dchamelium=enabled"
+EXTRA_OEMESON = "-Ddocs=disabled -Drunner=enabled -Dchamelium=enabled"
 COMPATIBLE_HOST = "(x86_64.*|i.86.*|arm.*|aarch64).*-linux"
 COMPATIBLE_HOST_libc-musl_class-target = "null"
 
@@ -30,6 +30,9 @@ SYSROOT_PREPROCESS_FUNCS += "gputools_sysroot_preprocess"
 do_install_append() {
     install -d ${D}/usr/share/${BPN}/scripts
     install ${S}/scripts/run-tests.sh ${D}/usr/share/${BPN}/scripts
+    install -d ${D}/usr/share/${BPN}/runner
+    install -D ${B}/runner/igt_runner ${D}/usr/share/${BPN}/runner
+    install -D ${B}/runner/igt_resume ${D}/usr/share/${BPN}/runner
 }
 
 FILES_${PN}-benchmarks += "${libexecdir}/${BPN}/benchmarks"
