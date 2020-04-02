@@ -1,0 +1,142 @@
+From daaf4f11ca8f6b033171d78e3384f4abce0e04bc Mon Sep 17 00:00:00 2001
+From: Daniel McIlvaney <damcilva@microsoft.com>
+Date: Fri, 12 Oct 2018 13:35:24 -0700
+Subject: [PATCH] core: modify tee_otp_get_hw_unique_key to return TEE_Result
+
+Getting the hardware key can fail on some platforms. Modify the function
+signature to return an appropriate error code.
+
+Signed-off-by: Daniel McIlvaney <damcilva@microsoft.com>
+Signed-off-by: Jordan Rhee <jordanrh@microsoft.com>
+Reviewed-by: Jens Wiklander <jens.wiklander@linaro.org>
+---
+ core/arch/arm/kernel/otp_stubs.c     |  3 ++-
+ core/arch/arm/plat-ls/main.c         | 12 +++++++++---
+ core/arch/arm/plat-ti/main.c         |  3 ++-
+ core/include/kernel/tee_common_otp.h |  3 ++-
+ core/tee/tee_rpmb_fs.c               |  6 +-----
+ documentation/secure_storage.md      |  2 +-
+ 6 files changed, 17 insertions(+), 12 deletions(-)
+
+diff --git a/core/arch/arm/kernel/otp_stubs.c b/core/arch/arm/kernel/otp_stubs.c
+index 1116944..c3cc426 100644
+--- a/core/arch/arm/kernel/otp_stubs.c
++++ b/core/arch/arm/kernel/otp_stubs.c
+@@ -13,9 +13,10 @@
+  * The default implementation just sets it to a constant.
+  */
+ 
+-__weak void tee_otp_get_hw_unique_key(struct tee_hw_unique_key *hwkey)
++__weak TEE_Result tee_otp_get_hw_unique_key(struct tee_hw_unique_key *hwkey)
+ {
+ 	memset(&hwkey->data[0], 0, sizeof(hwkey->data));
++	return TEE_SUCCESS;
+ }
+ 
+ __weak int tee_otp_get_die_id(uint8_t *buffer, size_t len)
+diff --git a/core/arch/arm/plat-ls/main.c b/core/arch/arm/plat-ls/main.c
+index 4653a68..d01ff95 100644
+--- a/core/arch/arm/plat-ls/main.c
++++ b/core/arch/arm/plat-ls/main.c
+@@ -177,17 +177,23 @@ int get_hw_unique_key(uint64_t smc_func_id, uint64_t in_key, uint64_t size);
+ 			   OPTEE_SMC_OWNER_SIP, \
+ 			   OPTEE_SMC_FUNCID_SIP_LS_HW_UNQ_KEY)
+ 
+-void tee_otp_get_hw_unique_key(struct tee_hw_unique_key *hwkey)
++TEE_Result tee_otp_get_hw_unique_key(struct tee_hw_unique_key *hwkey)
+ {
++	TEE_Result res;
+ 	int ret = 0;
+ 	uint8_t hw_unq_key[sizeof(hwkey->data)] __aligned(64);
+ 
+ 	ret = get_hw_unique_key(OPTEE_SMC_FAST_CALL_SIP_LS_HW_UNQ_KEY,
+ 			virt_to_phys(hw_unq_key), sizeof(hwkey->data));
+ 
+-	if (ret < 0)
++	if (ret < 0) {
+ 		EMSG("\nH/W Unique key is not fetched from the platform.");
+-	else
++		res = TEE_ERROR_SECURITY;
++	} else {
+ 		memcpy(&hwkey->data[0], hw_unq_key, sizeof(hwkey->data));
++		res = TEE_SUCCESS;
++	}
++
++	return res;
+ }
+ #endif
+diff --git a/core/arch/arm/plat-ti/main.c b/core/arch/arm/plat-ti/main.c
+index 879092b..8b17ca0 100644
+--- a/core/arch/arm/plat-ti/main.c
++++ b/core/arch/arm/plat-ti/main.c
+@@ -154,9 +154,10 @@ void console_init(void)
+ 
+ #if defined(CFG_OTP_SUPPORT)
+ 
+-void tee_otp_get_hw_unique_key(struct tee_hw_unique_key *hwkey)
++TEE_Result tee_otp_get_hw_unique_key(struct tee_hw_unique_key *hwkey)
+ {
+ 	memcpy(&hwkey->data[0], &plat_huk[0], sizeof(hwkey->data));
++	return TEE_SUCCESS;
+ }
+ 
+ #endif
+diff --git a/core/include/kernel/tee_common_otp.h b/core/include/kernel/tee_common_otp.h
+index a1b1490..8013849 100644
+--- a/core/include/kernel/tee_common_otp.h
++++ b/core/include/kernel/tee_common_otp.h
+@@ -8,13 +8,14 @@
+ #include <stddef.h>
+ #include <stdint.h>
+ #include <string.h>
++#include <tee_api_types.h>
+ #include <utee_defines.h>
+ 
+ struct tee_hw_unique_key {
+ 	uint8_t data[HW_UNIQUE_KEY_LENGTH];
+ };
+ 
+-void tee_otp_get_hw_unique_key(struct tee_hw_unique_key *hwkey);
++TEE_Result tee_otp_get_hw_unique_key(struct tee_hw_unique_key *hwkey);
+ int tee_otp_get_die_id(uint8_t *buffer, size_t len);
+ 
+ #endif /* TEE_COMMON_OTP_H */
+diff --git a/core/tee/tee_rpmb_fs.c b/core/tee/tee_rpmb_fs.c
+index 94dbb27..7ae604d 100644
+--- a/core/tee/tee_rpmb_fs.c
++++ b/core/tee/tee_rpmb_fs.c
+@@ -281,17 +281,13 @@ out:
+  *
+  * Maybe tee_get_hw_unique_key() should be exposed as
+  * generic API for getting hw unique key!
+- * We should change the API tee_otp_get_hw_unique_key()
+- * to return error code!
+  */
+ static TEE_Result tee_get_hw_unique_key(struct tee_hw_unique_key *hwkey)
+ {
+ 	if (!hwkey)
+ 		return TEE_ERROR_BAD_PARAMETERS;
+ 
+-	tee_otp_get_hw_unique_key(hwkey);
+-
+-	return TEE_SUCCESS;
++	return tee_otp_get_hw_unique_key(hwkey);
+ }
+ 
+ static TEE_Result tee_rpmb_key_gen(uint16_t dev_id __unused,
+diff --git a/documentation/secure_storage.md b/documentation/secure_storage.md
+index eca54a7..d2b6dd4 100644
+--- a/documentation/secure_storage.md
++++ b/documentation/secure_storage.md
+@@ -222,7 +222,7 @@ To allow Secure Storage to operate securely on your platform, you must define
+ implementations in your platform code for:
+ 
+ ``` c
+- void tee_otp_get_hw_unique_key(struct tee_hw_unique_key *hwkey);
++ TEE_Result tee_otp_get_hw_unique_key(struct tee_hw_unique_key *hwkey);
+  int tee_otp_get_die_id(uint8_t *buffer, size_t len);
+ ```
+ 
+-- 
+2.7.4
+
