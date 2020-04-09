@@ -1,0 +1,26 @@
+From a8ddc597d3dcbdae8fb7a3bc54fe345c352a2c71 Mon Sep 17 00:00:00 2001
+From: Peter Griffin <peter.griffin@linaro.org>
+Date: Mon, 10 Feb 2020 17:48:08 +0000
+Subject: [PATCH] build: remove pedantic from build directives
+
+Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
+---
+ mk/compile.mk | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/mk/compile.mk b/mk/compile.mk
+index 5c37df6..57cea62 100644
+--- a/mk/compile.mk
++++ b/mk/compile.mk
+@@ -39,7 +39,7 @@ comp-cflags-warns-medium = \
+ 	-Waggregate-return -Wredundant-decls
+ comp-cflags-warns-low = \
+ 	-Wold-style-definition -Wstrict-aliasing=2 \
+-	-Wundef -pedantic \
++	-Wundef \
+ 	-Wdeclaration-after-statement
+ 
+ comp-cflags-warns-1:= $(comp-cflags-warns-high)
+-- 
+2.7.4
+
