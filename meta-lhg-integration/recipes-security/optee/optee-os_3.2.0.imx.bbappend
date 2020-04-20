@@ -1,3 +1,5 @@
+FILESEXTRAPATHS_prepend := "${THISDIR}/${BPN}:"
+
 SRCBRANCH = "oemcrypto_v15"
 OPTEE_OS_SRC = "git://github.com/petegriffin/optee_os.git;protocol=https"
 SRC_URI = "\
