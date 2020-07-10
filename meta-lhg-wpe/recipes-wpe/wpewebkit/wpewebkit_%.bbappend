@@ -3,6 +3,8 @@ RDEPS_EXTRA_remove = " \
                       gstreamer1.0-plugins-good-mpg123 \
                       gstreamer1.0-plugins-bad-hls \
                      "
+# tmp SHA bump until https://github.com/WebPlatformForEmbedded/meta-wpe/pull/474 is merged 
+SRCREV = "686cd2f7df15f05417537485fd02ccbe632e5b09"
 
 # remove playready
 PACKAGECONFIG_remove = "playready"
